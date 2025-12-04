@@ -13,15 +13,26 @@ import os
 # CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="RMC - Checklist", page_icon="🔧")
 
-# FUNCIÓN PARA CONVERTIR IMAGEN A BASE64 (Vital para el PDF)
+# === CORRECCIÓN DE RUTAS (Vital para carpeta pages) ===
+# 1. Detectamos dónde está este archivo .py
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# 2. Subimos un nivel para llegar a la raíz del proyecto (donde está assets y templates)
+root_dir = os.path.dirname(current_dir)
+
+# 3. Definimos las rutas absolutas a los recursos
+logo_path = os.path.join(root_dir, "assets", "logo.png")
+templates_path = os.path.join(root_dir, "templates")
+
+# FUNCIÓN PARA CONVERTIR IMAGEN A BASE64
 def get_image_base64(path):
     try:
         with open(path, "rb") as image_file:
             return f"data:image/png;base64,{base64.b64encode(image_file.read()).decode()}"
     except FileNotFoundError:
-        return "" # Retorna vacío si no hay logo
+        st.error(f"Error: No se encontró la imagen en {path}")
+        return ""
 
-# === INTERFAZ DE USUARIO (LO QUE VE EL INSPECTOR) ===
+# === INTERFAZ DE USUARIO ===
 st.title("🔧 Checklist Inspección Herramientas Manuales")
 st.markdown("**Código:** 24057-SIGOP-R6529 | **Rev:** 2")
 
@@ -35,10 +46,9 @@ with col2:
 
 st.divider()
 
-# 2. Tabla de Chequeo (Cargada desde tu PDF [cite: 202])
+# 2. Tabla de Chequeo
 st.subheader("Condiciones a Verificar")
 
-# Estos son los ítems fijos de tu documento PDF
 items_default = [
     {"ITEM": "Estado general de brocas", "A/R": "A", "OBSERVACIONES": ""},
     {"ITEM": "Estado general de martillos o combos: mangos, caras", "A/R": "A", "OBSERVACIONES": ""},
@@ -53,18 +63,13 @@ items_default = [
 
 df_inicial = pd.DataFrame(items_default)
 
-# Data Editor: Permite cambiar A/R y escribir observaciones como en Excel
 datos_editados = st.data_editor(
     df_inicial,
     column_config={
-        "A/R": st.column_config.SelectboxColumn(
-            "Estado",
-            options=["A", "R", "NA"],
-            required=True
-        )
+        "A/R": st.column_config.SelectboxColumn("Estado", options=["A", "R", "NA"], required=True)
     },
     use_container_width=True,
-    num_rows="dynamic", # Permite agregar filas si traen herramientas nuevas
+    num_rows="dynamic",
     hide_index=True
 )
 
@@ -73,13 +78,8 @@ obs_generales = st.text_area("Observaciones Generales (Opcional)")
 # 3. Firma Digital
 st.subheader("Firma del Inspector")
 firma_canvas = st_canvas(
-    stroke_width=2,
-    stroke_color="#000000",
-    background_color="#ffffff",
-    height=100,
-    width=300,
-    drawing_mode="freedraw",
-    key="firma"
+    stroke_width=2, stroke_color="#000000", background_color="#ffffff",
+    height=100, width=300, drawing_mode="freedraw", key="firma"
 )
 
 # === GENERACIÓN DEL PDF ===
@@ -87,25 +87,19 @@ if st.button("📄 Generar e Imprimir PDF", type="primary"):
     if not proyecto or not inspector:
         st.error("⚠️ Por favor completa Proyecto e Inspector.")
     else:
-        # 1. Procesamos la Firma (CORRECCIÓN CRÍTICA)
+        # Procesar Firma
         firma_b64 = ""
         if firma_canvas.image_data is not None:
-            # Convertimos la matriz de numpy a imagen PIL
             try:
                 img_data = firma_canvas.image_data.astype("uint8")
-                # st_canvas devuelve RGBA, creamos la imagen
                 im = Image.fromarray(img_data)
-                
-                # Guardamos en memoria como PNG
                 buffered = io.BytesIO()
                 im.save(buffered, format="PNG")
-                
-                # Convertimos a Base64 para incrustar en HTML
                 firma_b64 = f"data:image/png;base64,{base64.b64encode(buffered.getvalue()).decode()}"
-            except Exception as e:
-                st.warning(f"No se pudo procesar la firma: {e}")
+            except:
+                pass
 
-        # 2. Preparamos los datos para Jinja
+        # Preparar datos
         lista_items = []
         for index, row in datos_editados.iterrows():
             lista_items.append({
@@ -114,14 +108,11 @@ if st.button("📄 Generar e Imprimir PDF", type="primary"):
                 "obs": row["OBSERVACIONES"]
             })
         
-        # 3. Cargamos Logo
-        logo_str = get_image_base64("assets/logo.png") # Asegúrate que tu logo se llame así
+        # Cargar Logo con la ruta corregida
+        logo_str = get_image_base64(logo_path)
 
-        # 4. Renderizamos HTML (Rutas absolutas como arreglamos antes)
-        directorio_actual = os.path.dirname(os.path.abspath(__file__))
-        ruta_templates = os.path.join(directorio_actual, "templates")
-        
-        env = Environment(loader=FileSystemLoader(ruta_templates))
+        # Configurar Jinja2 con la ruta corregida
+        env = Environment(loader=FileSystemLoader(templates_path))
         template = env.get_template("checklist.html")
         
         html_final = template.render(
@@ -134,10 +125,10 @@ if st.button("📄 Generar e Imprimir PDF", type="primary"):
             fecha_chequeo=fecha_chequeo.strftime("%d/%m/%Y"),
             items=lista_items,
             observaciones_generales=obs_generales,
-            firma_b64=firma_b64  # Aquí pasamos la firma procesada
+            firma_b64=firma_b64
         )
 
-        # 5. Creamos PDF
+        # Crear PDF
         try:
             pdf_bytes = HTML(string=html_final).write_pdf()
             st.success("✅ ¡PDF Generado correctamente!")

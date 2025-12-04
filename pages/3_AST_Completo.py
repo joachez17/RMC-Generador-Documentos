@@ -9,19 +9,23 @@ import base64
 import os
 from datetime import date, datetime
 
-# --- CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(page_title="AST Completo RMC", layout="wide")
+st.set_page_config(page_title="ANÁLISIS SEGURO DE TRABAJO", layout="wide")
+
+# === CORRECCIÓN DE RUTAS ===
+current_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(current_dir) # Subir un nivel
+
+logo_path = os.path.join(root_dir, "assets", "logo.png")
+templates_path = os.path.join(root_dir, "templates")
 
 # --- FUNCIONES AUXILIARES ---
 def get_image_base64(path):
-    """Convierte imagen local a base64 para incrustar en HTML"""
     if os.path.exists(path):
         with open(path, "rb") as img:
             return f"data:image/png;base64,{base64.b64encode(img.read()).decode()}"
     return ""
 
 def process_signature(canvas_result):
-    """Convierte la firma del canvas a imagen PNG base64"""
     if canvas_result.image_data is not None:
         try:
             img_data = canvas_result.image_data.astype("uint8")
@@ -66,7 +70,6 @@ with st.expander("2. Planificación del Trabajo", expanded=False):
     epps = c_epp.text_area("EPPs Específicos", "Casco, Lentes, Zapatos, Guantes")
     maquinas = c_maq.text_area("Vehículos/Maquinarias", "Camioneta 4x4, Grúa Horquilla")
     
-    st.markdown("**Identificación de Actividades de Alto Riesgo:**")
     riesgos_list = [
         "Potencial de arco eléctrico", "Potencial de ahogamiento", "Trabajo en altura (> 1,8 mt)",
         "Exposición a tensión viva > 50V", "Izaje y aparejos", "Poda, tala y roce",
@@ -106,27 +109,23 @@ with st.expander("4. Plan de Emergencia", expanded=False):
     ])
     df_emer_edit = st.data_editor(df_emer, num_rows="dynamic", use_container_width=True)
 
-# === SECCIÓN 5: CHARLA PREVIA (DETALLADA) ===
+# === SECCIÓN 5: CHARLA PREVIA ===
 with st.expander("5. Charla Previa de Seguridad", expanded=True):
-    # Fila 1
     cc1, cc2 = st.columns(2)
     charla_por = cc1.text_input("Realizado por (Relator)")
     charla_cargo = cc2.text_input("Cargo del Relator")
     
-    # Fila 2: Tiempos y Fecha
     cc3, cc4, cc5 = st.columns(3)
     charla_fecha = cc3.date_input("Fecha Charla", date.today(), key="date_charla")
     charla_ini = cc4.time_input("Hora Inicio Charla", datetime.strptime("08:00", "%H:%M").time(), key="time_ini_charla")
     charla_fin = cc5.time_input("Hora Término Charla", datetime.strptime("08:15", "%H:%M").time(), key="time_fin_charla")
     
-    # Firma
     st.write("Firma del Relator:")
     canvas_charla = st_canvas(
         stroke_width=2, stroke_color="#000", background_color="#f4f4f4",
         height=80, width=300, drawing_mode="freedraw", key="charla_sig"
     )
     
-    # Temas
     charla_temas = st.text_area("Temas Tratados", "• Análisis de riesgos del entorno.\n• Revisión de EPPs.\n• Coordinación de tareas.")
 
 # === SECCIÓN 6: COLABORADORES ===
@@ -149,54 +148,33 @@ if st.button("📄 Generar AST Completo", type="primary"):
     riesgos_obj = [{"label": r, "checked": r in riesgos_selec} for r in riesgos_list]
     riesgos_rows = [riesgos_obj[i:i+2] for i in range(0, len(riesgos_obj), 2)]
 
-    # 2. LIMPIEZA DE DATOS (CORRECCIÓN "NONE")
-    # ---------------------------------------------------------
-    # A. Limpiamos df_ast
-    # Rellenamos nulos con "" y convertimos todo a string para evitar "None"
-    df_ast_clean = df_ast.fillna("").astype(str)
-    # Reemplazamos la palabra literal "None" o "nan" si llegara a aparecer
-    df_ast_clean = df_ast_clean.replace(["None", "nan"], "")
-    
-    # Filtro inteligente: Mantenemos la fila si AL MENOS uno de los campos tiene texto.
-    # Así no borramos filas que solo tengan "Medidas de Control" pero no "Etapa".
+    # 2. Limpieza de Datos
+    df_ast_clean = df_ast.fillna("").astype(str).replace(["None", "nan"], "")
     pasos_data = []
     for _, row in df_ast_clean.iterrows():
-        # Si Etapa, Riesgo O Control tienen texto, guardamos la fila
         if row["Etapa"].strip() or row["Riesgo"].strip() or row["Control"].strip():
-            # Convertimos la serie a diccionario y manejamos los booleanos manualmente
-            # (Porque .astype(str) rompió los checkbox True/False, hay que recuperarlos del original)
             original_idx = _ 
             row_dict = row.to_dict()
-            
-            # Recuperamos los booleanos del dataframe original (df_ast) para los checkboxes
-            # Esto es vital para que las columnas E, S, I, A, EPP funcionen
             row_dict["E"] = bool(df_ast.at[original_idx, "E"])
             row_dict["S"] = bool(df_ast.at[original_idx, "S"])
             row_dict["I"] = bool(df_ast.at[original_idx, "I"])
             row_dict["A"] = bool(df_ast.at[original_idx, "A"])
             row_dict["EPP"] = bool(df_ast.at[original_idx, "EPP"])
-            
             pasos_data.append(row_dict)
 
-    # B. Limpiamos Emergencias
     df_emer_clean = df_emer_edit.fillna("").astype(str)
     emer_data = [r.to_dict() for _, r in df_emer_clean.iterrows() if r["Emergencia"].strip()]
 
-    # C. Limpiamos Colaboradores
     df_colab_clean = df_colab_edit.fillna("").astype(str)
     colab_data = [r.to_dict() for _, r in df_colab_clean.iterrows() if r["Nombre"].strip()]
-    # ---------------------------------------------------------
 
     # 3. Procesar Firmas e Imágenes
     firma_sup_b64 = process_signature(canvas_sup)
     firma_charla_b64 = process_signature(canvas_charla)
-    logo_b64 = get_image_base64("assets/logo.png")
+    logo_b64 = get_image_base64(logo_path)
 
-    # 4. Renderizar Template HTML
-    directorio = os.path.dirname(os.path.abspath(__file__))
-    ruta_templates = os.path.join(directorio, "templates")
-    
-    env = Environment(loader=FileSystemLoader(ruta_templates))
+    # 4. Renderizar
+    env = Environment(loader=FileSystemLoader(templates_path))
     template = env.get_template("ast_final.html")
 
     html_out = template.render(
@@ -207,15 +185,12 @@ if st.button("📄 Generar AST Completo", type="primary"):
         firma_sup_b64=firma_sup_b64,
         epps=epps, maquinas=maquinas, riesgos_rows=riesgos_rows,
         pasos=pasos_data, emergencias=emer_data,
-        
-        # Variables Charla Previa
         charla_por=charla_por, charla_cargo=charla_cargo,
         charla_fecha=charla_fecha.strftime("%d/%m/%Y"),
         charla_hora_ini=charla_ini.strftime("%H:%M"),
         charla_hora_fin=charla_fin.strftime("%H:%M"),
         firma_charla_b64=firma_charla_b64,
         charla_temas=charla_temas.replace("\n", "<br>"),
-        
         colaboradores=colab_data,
         revision_1=rev1, revision_2=rev2
     )
