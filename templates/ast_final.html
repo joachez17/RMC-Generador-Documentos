@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>AST RMC Completo</title>
+    <style>
+        /* === CONFIGURACIÓN DE PÁGINA === */
+        @page { size: A4; margin: 1cm; margin-bottom: 2cm; margin-top: 1cm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 8pt; color: #333; line-height: 1.2; }
+        
+        /* HEADER */
+        .top-header-table { width: 100%; margin-bottom: 10px; }
+        .top-header-table td { vertical-align: top; }
+        .logo-img { width: 130px; float: right; }
+        .main-title { 
+            text-align: center; color: #004B8D; font-size: 14pt; font-weight: bold; 
+            margin: 5px 0 15px 0; line-height: 1.1;
+        }
+
+        /* === ESTILOS "FICHA TÉCNICA" (BOXED) === */
+        .section-title {
+            background-color: #004B8D; color: white; font-weight: bold; 
+            padding: 4px 8px; font-size: 9pt; margin-top: 10px; margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .info-table { 
+            width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px;
+        }
+        .info-table td { padding: 3px 5px; border: 1px solid #ccc; vertical-align: middle; }
+        
+        .label-cell { background-color: #f2f2f2; font-weight: bold; color: #000; width: 18%; }
+        .input-cell { background-color: #fff; }
+        .center { text-align: center; }
+
+        /* GRID DE CHECKBOXES (SECCIÓN 2) */
+        .risk-grid { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px; }
+        .risk-grid td { padding: 3px; border: 1px solid #eee; width: 50%; }
+        .check-box {
+            display: inline-block; width: 9px; height: 9px; border: 1px solid #333; 
+            margin-right: 5px; text-align: center; line-height: 8px; font-size: 8px; font-weight: bold;
+        }
+
+        /* TABLAS DE DATOS (SECCIÓN 3, 4, 6) */
+        table.data-grid { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .header-blue { background-color: #004B8D; color: white; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #000; }
+        .header-sub { background-color: #fff; color: #000; text-align: center; font-weight: bold; font-size: 7pt; padding: 2px; border: 1px solid #000; }
+        
+        .data-grid td { border: 1px solid #999; padding: 4px; vertical-align: top; }
+        
+        /* Firmas */
+        .sig-img { height: 35px; display: block; margin: 0 auto; }
+
+        /* REVISIONES (SECCIÓN 7) */
+        .rev-box { border: 1px solid #999; padding: 5px; margin-bottom: 5px; min-height: 30px; }
+
+        /* Footer */
+        .footer { position: fixed; bottom: -30px; left: 0; right: 0; text-align: center; font-size: 7pt; color: #777; }
+        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
+
+    </style>
+</head>
+<body>
+
+    <table class="top-header-table">
+        <tr>
+            <td>
+                <div style="font-size: 8pt; color: #555;">
+                    <strong>CÓDIGO:</strong> 24931-SIGOP-R6503<br>
+                    <strong>REV:</strong> 2 | <strong>FECHA:</strong> 11/06/25
+                </div>
+            </td>
+            <td><img src="{{ logo_b64 }}" class="logo-img"></td>
+        </tr>
+    </table>
+
+    <div class="main-title">ANÁLISIS SEGURO DE TRABAJO (AST)<br>Y CHARLA PREVIA DE SEGURIDAD</div>
+
+    <div class="section-title">1. ANTECEDENTES GENERALES</div>
+    <table class="info-table">
+        <tr>
+            <td class="label-cell">TRABAJO A REALIZAR:</td>
+            <td class="input-cell" colspan="3">{{ trabajo }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">LUGAR:</td>
+            <td class="input-cell">{{ lugar }}</td>
+            <td class="label-cell">FECHA:</td>
+            <td class="input-cell center">{{ fecha }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">EMPRESA:</td>
+            <td class="input-cell">{{ empresa }}</td>
+            <td class="label-cell">HORARIOS:</td>
+            <td class="input-cell center">{{ hora_ini }} a {{ hora_fin }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">RESP. CLIENTE:</td>
+            <td class="input-cell">{{ resp_cliente }}</td>
+            <td class="label-cell">RESP. RMC:</td>
+            <td class="input-cell">{{ resp_rmc }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">SUPERVISOR TERRENO:</td>
+            <td class="input-cell">{{ supervisor }}</td>
+            <td class="label-cell">FIRMA SUPERVISOR:</td>
+            <td class="input-cell center">
+                {% if firma_sup_b64 %}<img src="{{ firma_sup_b64 }}" class="sig-img">{% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-title">2. PLANIFICACIÓN DEL TRABAJO</div>
+    
+    <table class="info-table">
+        <tr>
+            <td class="label-cell">EPPS ESPECÍFICOS:</td>
+            <td class="input-cell">{{ epps }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">VEHÍCULOS/MAQ:</td>
+            <td class="input-cell">{{ maquinas }}</td>
+        </tr>
+    </table>
+
+    <div style="font-weight: bold; margin: 5px 0; font-size: 8pt;">IDENTIFICACIÓN DE ACTIVIDADES DE ALTO RIESGO:</div>
+    <table class="risk-grid">
+        {% for row in riesgos_rows %}
+        <tr>
+            {% for item in row %}
+            <td>
+                <span class="check-box">{% if item.checked %}X{% else %}&nbsp;{% endif %}</span> {{ item.label }}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div class="section-title">3. ANÁLISIS SEGURO DEL TRABAJO</div>
+    <table class="data-grid">
+        <thead>
+            <tr>
+                <td rowspan="2" class="header-blue" style="width: 5%;">N°</td>
+                <td rowspan="2" class="header-blue" style="width: 25%;">ETAPAS DEL TRABAJO</td>
+                <td rowspan="2" class="header-blue" style="width: 25%;">PELIGRO / RIESGOS</td>
+                <td rowspan="2" class="header-blue" style="width: 30%;">MEDIDAS DE CONTROL</td>
+                <td colspan="5" class="header-blue">JERARQUÍA DE CONTROL</td>
+            </tr>
+            <tr>
+                <td class="header-sub">E</td>
+                <td class="header-sub">S</td>
+                <td class="header-sub">I</td>
+                <td class="header-sub">A</td>
+                <td class="header-sub">EPP</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in pasos %}
+            <tr>
+                <td class="center">{{ loop.index }}</td>
+                <td>{{ p.Etapa }}</td>
+                <td>{{ p.Riesgo }}</td>
+                <td>{{ p.Control }}</td>
+                <td class="center">{% if p.E %}X{% endif %}</td>
+                <td class="center">{% if p.S %}X{% endif %}</td>
+                <td class="center">{% if p.I %}X{% endif %}</td>
+                <td class="center">{% if p.A %}X{% endif %}</td>
+                <td class="center">{% if p.EPP %}X{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="section-title">4. PLAN DE EMERGENCIA</div>
+    <table class="data-grid">
+        <thead>
+            <tr>
+                <td class="header-blue" style="width: 10%;">N°</td>
+                <td class="header-blue" style="width: 40%;">POSIBLE EMERGENCIA</td>
+                <td class="header-blue" style="width: 50%;">PASOS A SEGUIR</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for em in emergencias %}
+            <tr>
+                <td class="center">{{ loop.index }}</td>
+                <td>{{ em.Emergencia }}</td>
+                <td>{{ em.Pasos }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="page-break-inside: avoid;">
+        <div class="section-title">5. CHARLA PREVIA DE SEGURIDAD</div>
+        <table class="info-table">
+            <tr>
+                <td class="label-cell">REALIZADO POR:</td>
+                <td class="input-cell">{{ charla_por }}</td>
+                <td class="label-cell">CARGO:</td>
+                <td class="input-cell">{{ charla_cargo }}</td>
+            </tr>
+            <tr>
+                <td class="label-cell">FECHA:</td>
+                <td class="input-cell center">{{ charla_fecha }}</td>
+                <td class="label-cell">FIRMA:</td>
+                <td class="input-cell center" style="height: 40px;">
+                    {% if firma_charla_b64 %}
+                        <img src="{{ firma_charla_b64 }}" class="sig-img">
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="label-cell">HORA INICIO:</td>
+                <td class="input-cell center">{{ charla_hora_ini }}</td>
+                <td class="label-cell">HORA TÉRMINO:</td>
+                <td class="input-cell center">{{ charla_hora_fin }}</td>
+            </tr>
+        </table>
+
+        <table class="data-grid" style="margin-top: 0;">
+            <thead>
+                <tr>
+                    <td class="header-blue" style="text-align: left; padding-left: 10px;">
+                        TEMAS TRATADOS DURANTE LA CHARLA PREVIA DE SEGURIDAD
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="height: 60px; vertical-align: top; background-color: #fff;">
+                        {{ charla_temas }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-title">6. REGISTRO DE REVISIÓN COLABORADOR</div>
+    <table class="data-grid">
+        <thead>
+            <tr>
+                <td class="header-blue" style="width: 5%;">N°</td>
+                <td class="header-blue" style="width: 45%;">COLABORADOR</td>
+                <td class="header-blue" style="width: 20%;">RUT</td>
+                <td class="header-blue" style="width: 30%;">FIRMA</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for col in colaboradores %}
+            <tr>
+                <td class="center">{{ loop.index }}</td>
+                <td>{{ col.Nombre }}</td>
+                <td class="center">{{ col.RUT }}</td>
+                <td class="center" style="color: #888; font-size: 6pt;">FIRMADO DIGITALMENTE</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="section-title">7. REVISIONES (NO OBLIGATORIAS)</div>
+    <div class="rev-box">
+        <strong>1° Revisión:</strong> {{ revision_1 }}
+    </div>
+    <div class="rev-box">
+        <strong>2° Revisión:</strong> {{ revision_2 }}
+    </div>
+
+    <div class="footer">
+        <div class="footer-company">RMC CORPORATE</div>
+        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
+        <div>
+            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
+            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
+            Correo: <span class="footer-link">contacto@rmc.cl</span>
+        </div>
+    </div>
+
+</body>
+</html>
