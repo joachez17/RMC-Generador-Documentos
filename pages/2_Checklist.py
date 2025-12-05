@@ -9,28 +9,95 @@ from streamlit_drawable_canvas import st_canvas
 import base64
 from datetime import date
 import os
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email import encoders
 
 # CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="RMC - Checklist", page_icon="🔧")
 
-# === CORRECCIÓN DE RUTAS (Vital para carpeta pages) ===
-# 1. Detectamos dónde está este archivo .py
+# === CORRECCIÓN DE RUTAS ===
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# 2. Subimos un nivel para llegar a la raíz del proyecto (donde está assets y templates)
-root_dir = os.path.dirname(current_dir)
-
-# 3. Definimos las rutas absolutas a los recursos
+root_dir = os.path.dirname(current_dir) # Subir un nivel
 logo_path = os.path.join(root_dir, "assets", "logo.png")
 templates_path = os.path.join(root_dir, "templates")
 
-# FUNCIÓN PARA CONVERTIR IMAGEN A BASE64
+# --- FUNCIONES AUXILIARES ---
 def get_image_base64(path):
     try:
         with open(path, "rb") as image_file:
             return f"data:image/png;base64,{base64.b64encode(image_file.read()).decode()}"
     except FileNotFoundError:
-        st.error(f"Error: No se encontró la imagen en {path}")
         return ""
+
+def process_signature(canvas_result):
+    if canvas_result.image_data is not None:
+        try:
+            img_data = canvas_result.image_data.astype("uint8")
+            im = Image.fromarray(img_data)
+            buffered = io.BytesIO()
+            im.save(buffered, format="PNG")
+            return f"data:image/png;base64,{base64.b64encode(buffered.getvalue()).decode()}"
+        except:
+            return None
+    return None
+
+# --- FUNCIÓN DE ENVÍO DE CORREO (EL MOTOR) ---
+def send_email_with_pdf(pdf_bytes, filename, location, inspector_name):
+    # Cargar secretos
+    try:
+        smtp_server = st.secrets["email"]["smtp_server"]
+        smtp_port = st.secrets["email"]["smtp_port"]
+        sender_email = st.secrets["email"]["sender_email"]
+        sender_password = st.secrets["email"]["sender_password"]
+        receiver_email = st.secrets["email"]["receiver_email"]
+    except Exception:
+        st.error("⚠️ Error de configuración de correo (Secrets).")
+        return False
+
+    # Crear el mensaje
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = f"CHECKLIST NUEVO: {location} - {inspector_name}"
+
+    body = f"""
+    Estimados Control Documental,
+    
+    Se ha realizado una nueva inspección de herramientas.
+    
+    - Proyecto: {location}
+    - Inspector: {inspector_name}
+    - Fecha: {date.today()}
+    
+    Adjunto encontrarás el reporte en PDF.
+    
+    Atte,
+    Sistema Digital RMC
+    """
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Adjuntar PDF
+    part = MIMEBase('application', 'octet-stream')
+    part.set_payload(pdf_bytes)
+    encoders.encode_base64(part)
+    part.add_header('Content-Disposition', f"attachment; filename= {filename}")
+    msg.attach(part)
+
+    # Enviar
+    try:
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        text = msg.as_string()
+        server.sendmail(sender_email, receiver_email, text)
+        server.quit()
+        return True
+    except Exception as e:
+        st.error(f"Error al enviar correo: {e}")
+        return False
 
 # === INTERFAZ DE USUARIO ===
 st.title("🔧 Checklist Inspección Herramientas Manuales")
@@ -82,22 +149,13 @@ firma_canvas = st_canvas(
     height=100, width=300, drawing_mode="freedraw", key="firma"
 )
 
-# === GENERACIÓN DEL PDF ===
-if st.button("📄 Generar e Imprimir PDF", type="primary"):
+# === GENERACIÓN DEL PDF Y ENVÍO ===
+if st.button("📄 Generar y Enviar PDF", type="primary"):
     if not proyecto or not inspector:
         st.error("⚠️ Por favor completa Proyecto e Inspector.")
     else:
         # Procesar Firma
-        firma_b64 = ""
-        if firma_canvas.image_data is not None:
-            try:
-                img_data = firma_canvas.image_data.astype("uint8")
-                im = Image.fromarray(img_data)
-                buffered = io.BytesIO()
-                im.save(buffered, format="PNG")
-                firma_b64 = f"data:image/png;base64,{base64.b64encode(buffered.getvalue()).decode()}"
-            except:
-                pass
+        firma_b64 = process_signature(firma_canvas)
 
         # Preparar datos
         lista_items = []
@@ -108,10 +166,10 @@ if st.button("📄 Generar e Imprimir PDF", type="primary"):
                 "obs": row["OBSERVACIONES"]
             })
         
-        # Cargar Logo con la ruta corregida
+        # Cargar Logo
         logo_str = get_image_base64(logo_path)
 
-        # Configurar Jinja2 con la ruta corregida
+        # Renderizar HTML
         env = Environment(loader=FileSystemLoader(templates_path))
         template = env.get_template("checklist.html")
         
@@ -131,9 +189,20 @@ if st.button("📄 Generar e Imprimir PDF", type="primary"):
         # Crear PDF
         try:
             pdf_bytes = HTML(string=html_final).write_pdf()
-            st.success("✅ ¡PDF Generado correctamente!")
+            
+            # --- ENVÍO DE CORREO AUTOMÁTICO ---
+            with st.spinner("Enviando reporte a Control Documental..."):
+                filename_pdf = f"Checklist_{proyecto}_{fecha_chequeo}.pdf"
+                
+                if send_email_with_pdf(pdf_bytes, filename_pdf, proyecto, inspector):
+                    st.success("✅ ¡Reporte enviado exitosamente!")
+                    st.balloons()
+                else:
+                    st.warning("⚠️ El PDF se generó, pero falló el envío de correo.")
+
+            # Botón de descarga
             st.download_button(
-                label="Descargar PDF",
+                label="Descargar Copia Local",
                 data=pdf_bytes,
                 file_name=f"Checklist_{proyecto}.pdf",
                 mime="application/pdf"
