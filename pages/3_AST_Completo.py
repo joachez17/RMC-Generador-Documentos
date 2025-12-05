@@ -8,13 +8,18 @@ import io
 import base64
 import os
 from datetime import date, datetime
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email import encoders
 
-st.set_page_config(page_title="ANÁLISIS SEGURO DE TRABAJO", layout="wide")
+# --- CONFIGURACIÓN DE PÁGINA ---
+st.set_page_config(page_title="AST Completo RMC", layout="wide")
 
 # === CORRECCIÓN DE RUTAS ===
 current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(current_dir) # Subir un nivel
-
 logo_path = os.path.join(root_dir, "assets", "logo.png")
 templates_path = os.path.join(root_dir, "templates")
 
@@ -36,6 +41,62 @@ def process_signature(canvas_result):
         except:
             return None
     return None
+
+# --- FUNCIÓN DE ENVÍO DE CORREO ---
+def send_email_with_pdf(pdf_bytes, filename, location, worker_name):
+    # Cargar secretos desde Streamlit Cloud
+    # (Si corres en local, necesitas un archivo .streamlit/secrets.toml)
+    try:
+        smtp_server = st.secrets["email"]["smtp_server"]
+        smtp_port = st.secrets["email"]["smtp_port"]
+        sender_email = st.secrets["email"]["sender_email"]
+        sender_password = st.secrets["email"]["sender_password"]
+        receiver_email = st.secrets["email"]["receiver_email"]
+    except FileNotFoundError:
+        st.error("⚠️ No se encontraron los secretos de correo. Configúralos en .streamlit/secrets.toml o en la nube.")
+        return False
+
+    # Crear el mensaje
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = f"AST NUEVO: {location} - {worker_name}"
+
+    body = f"""
+    Estimados Control Documental,
+    
+    Se ha generado un nuevo documento AST digital desde terreno.
+    
+    - Proyecto/Lugar: {location}
+    - Supervisor Responsable: {worker_name}
+    - Fecha: {date.today()}
+    
+    El documento PDF se encuentra adjunto para su archivo.
+    
+    Atte,
+    Sistema Digital RMC
+    """
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Adjuntar PDF
+    part = MIMEBase('application', 'octet-stream')
+    part.set_payload(pdf_bytes)
+    encoders.encode_base64(part)
+    part.add_header('Content-Disposition', f"attachment; filename= {filename}")
+    msg.attach(part)
+
+    # Enviar
+    try:
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        text = msg.as_string()
+        server.sendmail(sender_email, receiver_email, text)
+        server.quit()
+        return True
+    except Exception as e:
+        st.error(f"Error al enviar correo: {e}")
+        return False
 
 # --- TÍTULO DE LA APP ---
 st.title("📋 Generador AST Completo (WBS-SIGOP-R6503)")
@@ -70,6 +131,7 @@ with st.expander("2. Planificación del Trabajo", expanded=False):
     epps = c_epp.text_area("EPPs Específicos", "Casco, Lentes, Zapatos, Guantes")
     maquinas = c_maq.text_area("Vehículos/Maquinarias", "Camioneta 4x4, Grúa Horquilla")
     
+    st.markdown("**Identificación de Actividades de Alto Riesgo:**")
     riesgos_list = [
         "Potencial de arco eléctrico", "Potencial de ahogamiento", "Trabajo en altura (> 1,8 mt)",
         "Exposición a tensión viva > 50V", "Izaje y aparejos", "Poda, tala y roce",
@@ -141,8 +203,8 @@ with st.expander("7. Revisiones (Opcional)", expanded=False):
     rev1 = st.text_input("1° Revisión (Comentarios)", "Sin Comentarios")
     rev2 = st.text_input("2° Revisión (Comentarios)", "Sin Comentarios")
 
-# --- GENERAR PDF ---
-if st.button("📄 Generar AST Completo", type="primary"):
+# --- GENERAR PDF Y ENVIAR ---
+if st.button("📄 Generar y Enviar a RMC", type="primary"):
     
     # 1. Procesar Riesgos
     riesgos_obj = [{"label": r, "checked": r in riesgos_selec} for r in riesgos_list]
@@ -197,5 +259,17 @@ if st.button("📄 Generar AST Completo", type="primary"):
 
     # 5. Crear PDF
     pdf_bytes = HTML(string=html_out).write_pdf()
-    st.success("✅ ¡AST Completo Generado Exitosamente!")
-    st.download_button("Descargar PDF", pdf_bytes, file_name="AST_RMC_Final.pdf", mime="application/pdf")
+    
+    # 6. ENVIAR CORREO
+    with st.spinner("Enviando documento a Control Documental..."):
+        filename_pdf = f"AST_{lugar}_{fecha.strftime('%d%m%Y')}.pdf"
+        
+        # Llamamos a la función de correo
+        if send_email_with_pdf(pdf_bytes, filename_pdf, lugar, supervisor):
+            st.success("✅ ¡Documento enviado exitosamente por correo!")
+            st.balloons()
+        else:
+            st.warning("⚠️ El PDF se generó, pero no se pudo enviar por correo. (Verifica los Secrets)")
+
+    # 7. Botón descarga manual
+    st.download_button("Descargar Copia Local", pdf_bytes, file_name="AST_RMC_Final.pdf", mime="application/pdf")
