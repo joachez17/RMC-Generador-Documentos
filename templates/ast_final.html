@@ -5,15 +5,14 @@
     <title>AST RMC Completo</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* === 1. CONFIGURACIÓN DE LA HOJA (BLINDAJE DE MÁRGENES) === */
+        /* === 1. CONFIGURACIÓN DE PÁGINA === */
         @page { 
             size: A4; 
             margin-left: 1cm; 
             margin-right: 1cm;
-            /* Espacio arriba para el Header */
             margin-top: 3.5cm; 
-            /* Espacio GIGANTE abajo para asegurar que la tabla frene antes del footer */
-            margin-bottom: 5cm; 
+            /* AUMENTADO: Obligamos al contenido a detenerse 4.5cm antes del final */
+            margin-bottom: 4.5cm; 
         }
         
         body { 
@@ -23,10 +22,10 @@
             line-height: 1.2; 
         }
 
-        /* === 2. HEADER FLOTANTE === */
+        /* === 2. HEADER FIJO === */
         .header-fixed {
             position: fixed; 
-            top: -3cm; /* Se ubica en el margen superior */
+            top: -3cm; 
             left: 0; 
             right: 0; 
             height: 2.8cm;
@@ -34,38 +33,31 @@
             z-index: 1000;
         }
 
-        /* === 3. FOOTER FLOTANTE === */
+        /* === 3. FOOTER FIJO (CORREGIDO) === */
         .footer-fixed {
             position: fixed; 
-            /* Lo ubicamos bien abajo, dentro del margen de 5cm */
-            bottom: -4cm; 
+            /* Lo colocamos dentro del margen, dejando 1cm de separación con el contenido */
+            bottom: -3.5cm; 
             left: 0; 
             right: 0; 
             height: 3cm;
             text-align: center; 
             font-size: 8pt; 
             color: #777;
+            /* El fondo blanco tapa cualquier línea de tabla que intente pasarse */
+            background-color: white; 
+            z-index: 1000; 
+            padding-top: 5px;
         }
 
-        /* === 4. REGLA DE ORO PARA TABLAS === */
-        /* Esto evita que una fila se corte a la mitad y cause errores visuales */
-        tr { 
-            page-break-inside: avoid; 
-        }
+        /* ESTILOS GENERALES (INTACTOS) */
+        .footer-company { font-weight: bold; color: #333; font-size: 9pt; margin-bottom: 2px; }
+        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
         
-        /* Asegura que los encabezados azules se repitan si la tabla salta de página */
-        thead { display: table-header-group; }
-        tfoot { display: table-footer-group; }
-
-
-        /* === ESTILOS DE TU DISEÑO === */
         .top-header-table { width: 100%; border: none; }
         .top-header-table td { vertical-align: top; border: none; }
         .logo-img { width: 130px; float: right; }
         
-        .footer-company { font-weight: bold; color: #333; font-size: 9pt; margin-bottom: 2px; }
-        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
-
         .main-title { 
             text-align: center; color: #004B8D; font-size: 14pt; font-weight: bold; 
             margin: 0 0 15px 0; line-height: 1.1;
@@ -83,11 +75,14 @@
         .input-cell { background-color: #fff; }
         .center { text-align: center; }
 
-        /* TABLA DEL AST */
+        /* TABLA AST */
         table.data-grid { width: 100%; border-collapse: collapse; margin-top: 5px; }
         .header-blue { background-color: #004B8D; color: white; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #000; }
         .header-sub { background-color: #fff; color: #000; text-align: center; font-weight: bold; font-size: 7pt; padding: 2px; border: 1px solid #000; }
         .data-grid td { border: 1px solid #999; padding: 4px; vertical-align: top; }
+        
+        /* EVITA QUE LAS FILAS SE CORTEN A LA MITAD */
+        tr { page-break-inside: avoid; }
 
         .risk-grid { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px; }
         .risk-grid td { padding: 3px; border: 1px solid #eee; width: 50%; }
