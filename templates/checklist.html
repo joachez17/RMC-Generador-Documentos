@@ -5,15 +5,16 @@
     <title>Checklist RMC</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* === CONFIGURACIÓN DE PÁGINA (CRUCIAL PARA REPETIR HEADER/FOOTER) === */
+        /* === 1. CONFIGURACIÓN DE PÁGINA (Vital para Header/Footer repetitivo) === */
         @page { 
             size: A4; 
             margin-left: 1cm; 
             margin-right: 1cm;
-            margin-top: 3.5cm; /* Espacio reservado arriba para el Logo */
-            margin-bottom: 2.5cm; /* Espacio reservado abajo para el Footer */
+            /* Dejamos espacio ARRIBA para el Logo y ABAJO para el Footer */
+            margin-top: 3.5cm; 
+            margin-bottom: 3cm; 
         }
-        
+
         body { 
             font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif; 
             font-size: 10pt; 
@@ -21,85 +22,73 @@
             line-height: 1.3; 
         }
 
-        /* === HEADER FIJO (SE REPITE EN TODAS LAS PÁGINAS) === */
+        /* === 2. HEADER FIJO (LOGO REPETITIVO) === */
         .header-fixed {
             position: fixed; 
-            top: -3cm; /* Subimos al margen superior */
+            top: -2.8cm; /* Subimos el header al espacio reservado */
             left: 0; 
             right: 0; 
-            height: 3cm;
-            background-color: white; /* Evita que el texto se vea por detrás */
+            height: 2.5cm;
+            background-color: white; /* Fondo blanco para tapar contenido si pasa por debajo */
+            z-index: 1000;
         }
 
-        /* === FOOTER FIJO (SE REPITE EN TODAS LAS PÁGINAS) === */
-        .footer-fixed {
+        /* === 3. FOOTER FIJO (TEXTO REPETITIVO) === */
+        .footer {
             position: fixed; 
-            bottom: -2cm; /* Bajamos al margen inferior */
+            bottom: -2.5cm; /* Bajamos el footer al espacio reservado */
             left: 0; 
             right: 0; 
             height: 2cm;
             text-align: center; 
             font-size: 8pt; 
             color: #777;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
         }
-        
-        /* ESTILOS DE TU DISEÑO ORIGINAL */
+
+        /* Estilos del Footer Específico que pediste */
+        .footer-company { font-weight: bold; color: #333; font-size: 9pt; margin-bottom: 2px; }
+        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
+
+        /* Estilos Generales */
         .top-header-table { width: 100%; border: none; }
         .top-header-table td { border: none; vertical-align: top; }
         .meta-info { font-size: 8pt; color: #555; text-align: left; }
         .logo-container { text-align: right; }
         .logo-img { width: 140px; }
 
-        .footer-company { font-weight: bold; color: #333; margin-bottom: 2px; }
-        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
-
         .main-title { 
             text-align: center; color: #004B8D; font-size: 18pt; 
             font-weight: bold; text-transform: uppercase; margin: 0 0 20px 0; 
         }
 
-        .info-table { 
-            width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 20px;
-        }
-        .info-table td {
-            padding: 6px 8px; border: 1px solid #ccc; vertical-align: middle;
-        }
-        .label-cell { 
-            background-color: #f2f2f2; font-weight: bold; color: #000; font-size: 9pt; width: 25%; 
-        }
+        /* Ficha Técnica */
+        .info-table { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 20px; }
+        .info-table td { padding: 6px 8px; border: 1px solid #ccc; vertical-align: middle; }
+        .label-cell { background-color: #f2f2f2; font-weight: bold; color: #000; font-size: 9pt; width: 25%; }
         .input-cell { background-color: #fff; color: #000; font-size: 10pt; }
         .header-sig-img { height: 45px; display: block; margin: 0 auto; }
 
         .instructions { text-align: right; font-size: 7pt; color: #666; margin-bottom: 5px; }
         
+        /* Tabla Checklist */
         table.checklist { width: 100%; border-collapse: collapse; margin-top: 0; }
-        .header-blue { 
-            background-color: #004B8D; color: white; text-align: center; 
-            font-weight: bold; padding: 8px; text-transform: uppercase; font-size: 10pt;
-        }
-        .header-black th { 
-            background-color: #000; color: white; font-weight: bold; 
-            font-size: 8pt; padding: 6px; text-align: center; border: 1px solid #000;
-        }
+        .header-blue { background-color: #004B8D; color: white; text-align: center; font-weight: bold; padding: 8px; text-transform: uppercase; font-size: 10pt; }
+        .header-black th { background-color: #000; color: white; font-weight: bold; font-size: 8pt; padding: 6px; text-align: center; border: 1px solid #000; }
         .checklist td { border: 1px solid #ddd; padding: 8px 5px; vertical-align: middle; }
         .col-idx { width: 5%; text-align: center; color: #888; font-size: 9pt; }
         .col-item { width: 50%; }
-        .col-ar { width: 10%; text-align: center; font-weight: bold; font-size: 11pt;}
+        .col-ar { width: 10%; text-align: center; font-weight: bold; font-size: 11pt; }
         .col-obs { width: 35%; font-size: 9pt; }
         .status-A { color: #009933; } 
         .status-R { color: #cc0000; } 
         .status-NA { color: #666666; } 
 
         .obs-section { margin-top: 20px; }
-        .obs-title { 
-            background-color: #f2f2f2; border: 1px solid #ccc; border-bottom: none;
-            font-weight: bold; font-size: 9pt; padding: 5px 10px; display: inline-block;
-        }
-        .obs-box { 
-            width: 100%; padding: 10px; border: 1px solid #ccc; 
-            font-size: 10pt; min-height: 40px; background-color: #fff;
-            box-sizing: border-box; 
-        }
+        .obs-title { background-color: #f2f2f2; border: 1px solid #ccc; border-bottom: none; font-weight: bold; font-size: 9pt; padding: 5px 10px; display: inline-block; }
+        .obs-box { width: 100%; padding: 10px; border: 1px solid #ccc; font-size: 10pt; min-height: 40px; background-color: #fff; box-sizing: border-box; }
+
     </style>
 </head>
 <body>
@@ -120,6 +109,16 @@
                 </td>
             </tr>
         </table>
+    </div>
+
+    <div class="footer">
+        <div class="footer-company">RMC CORPORATE</div>
+        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
+        <div>
+            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
+            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
+            Correo: <span class="footer-link">contacto@rmc.cl</span>
+        </div>
     </div>
 
     <div class="main-title">
@@ -181,16 +180,6 @@
         <div class="obs-title">OBSERVACIONES GENERALES</div>
         <div class="obs-box">
             {{ observaciones_generales }}
-        </div>
-    </div>
-
-    <div class="footer">
-        <div class="footer-company">RMC CORPORATE</div>
-        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
-        <div>
-            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
-            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
-            Correo: <span class="footer-link">contacto@rmc.cl</span>
         </div>
     </div>
 

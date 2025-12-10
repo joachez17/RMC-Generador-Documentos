@@ -5,13 +5,13 @@
     <title>AST RMC Completo</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* === CONFIGURACIÓN DE PÁGINA (Paginación) === */
+        /* === 1. CONFIGURACIÓN DE PÁGINA === */
         @page { 
             size: A4; 
             margin-left: 1cm; 
             margin-right: 1cm;
-            margin-top: 3.5cm; 
-            margin-bottom: 2.5cm;
+            margin-top: 3.5cm; /* Espacio para Header */
+            margin-bottom: 3cm; /* Espacio para Footer */
         }
         
         body { 
@@ -20,26 +20,40 @@
             color: #333; 
             line-height: 1.2; 
         }
-        
-        /* === HEADER FIJO === */
+
+        /* === 2. HEADER FIJO === */
         .header-fixed {
-            position: fixed; top: -3cm; left: 0; right: 0; height: 3cm; background-color: white;
+            position: fixed; 
+            top: -2.8cm; 
+            left: 0; 
+            right: 0; 
+            height: 2.5cm;
+            background-color: white;
+            z-index: 1000;
         }
 
-        /* === FOOTER FIJO === */
-        .footer-fixed {
-            position: fixed; bottom: -2cm; left: 0; right: 0; height: 2cm;
-            text-align: center; font-size: 7pt; color: #777;
+        /* === 3. FOOTER FIJO === */
+        .footer {
+            position: fixed; 
+            bottom: -2.5cm; 
+            left: 0; 
+            right: 0; 
+            height: 2cm;
+            text-align: center; 
+            font-size: 7pt; 
+            color: #777;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
         }
 
-        /* ESTILOS ORIGINALES DE TU DISEÑO */
+        .footer-company { font-weight: bold; color: #333; font-size: 8pt; margin-bottom: 2px; }
+        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
+
+        /* Estilos Generales */
         .top-header-table { width: 100%; margin-bottom: 10px; }
         .top-header-table td { vertical-align: top; }
         .logo-img { width: 130px; float: right; }
         
-        .footer-company { font-weight: bold; color: #333; font-size: 8pt; margin-bottom: 2px; }
-        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
-
         .main-title { 
             text-align: center; color: #004B8D; font-size: 14pt; font-weight: bold; 
             margin: 5px 0 15px 0; line-height: 1.1;
@@ -87,6 +101,16 @@
                 <td><img src="{{ logo_b64 }}" class="logo-img"></td>
             </tr>
         </table>
+    </div>
+
+    <div class="footer">
+        <div class="footer-company">RMC CORPORATE</div>
+        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
+        <div>
+            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
+            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
+            Correo: <span class="footer-link">contacto@rmc.cl</span>
+        </div>
     </div>
 
     <div class="main-title">ANÁLISIS SEGURO DE TRABAJO (AST)<br>Y CHARLA PREVIA DE SEGURIDAD</div>
@@ -278,15 +302,6 @@
     </div>
     <div class="rev-box">
         <strong>2° Revisión:</strong> {{ revision_2 }}
-    </div>
-    <div class="footer">
-        <div class="footer-company">RMC CORPORATE</div>
-        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
-        <div>
-            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
-            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
-            Correo: <span class="footer-link">contacto@rmc.cl</span>
-        </div>
     </div>
 
 </body>
