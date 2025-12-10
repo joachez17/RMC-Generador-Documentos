@@ -5,84 +5,58 @@
     <title>Checklist RMC</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* === 1. CONFIGURACIÓN DE PÁGINA (EL SECRETO) === */
+        /* === CONFIGURACIÓN DE PÁGINA === */
         @page { 
             size: A4; 
             margin-left: 1cm; 
             margin-right: 1cm;
-            margin-top: 3.5cm; /* Espacio reservado para el Logo */
-            margin-bottom: 3.5cm; /* AUMENTADO: Mucho espacio para que el Footer respire */
+            margin-top: 3.5cm; /* Espacio para Header */
+            margin-bottom: 3.5cm; /* Espacio GRANDE para Footer */
         }
+        
+        body { font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif; font-size: 10pt; color: #333; line-height: 1.3; }
 
-        body { 
-            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif; 
-            font-size: 10pt; 
-            color: #333; 
-            line-height: 1.3; 
-        }
-
-        /* === 2. HEADER FIJO (LOGO EN TODAS LAS PÁGINAS) === */
+        /* === HEADER FIJO === */
         .header-fixed {
-            position: fixed; 
-            top: -3cm; /* Subimos al margen superior */
-            left: 0; 
-            right: 0; 
-            height: 2.5cm;
-            background-color: white; 
-            z-index: 1000;
+            position: fixed; top: -3cm; left: 0; right: 0; height: 2.8cm;
+            background-color: white; z-index: 1000;
         }
 
-        /* === 3. FOOTER FIJO (PIE EN TODAS LAS PÁGINAS) === */
+        /* === FOOTER FIJO === */
         .footer-fixed {
-            position: fixed; 
-            bottom: -3cm; /* Bajamos al margen inferior */
-            left: 0; 
-            right: 0; 
-            height: 2.5cm;
-            text-align: center; 
-            font-size: 8pt; 
-            color: #777;
-            /* Debug: border: 1px solid red; (Descomentar si quieres ver la caja) */
+            position: fixed; bottom: -3cm; left: 0; right: 0; height: 2.5cm;
+            text-align: center; font-size: 8pt; color: #777;
         }
 
-        /* ESTILOS DEL CONTENIDO */
+        /* Estilos Generales */
         .footer-company { font-weight: bold; color: #333; font-size: 9pt; margin-bottom: 2px; }
         .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
-
         .top-header-table { width: 100%; border: none; }
         .top-header-table td { border: none; vertical-align: top; }
         .meta-info { font-size: 8pt; color: #555; text-align: left; }
         .logo-container { text-align: right; }
         .logo-img { width: 140px; }
-
-        .main-title { 
-            text-align: center; color: #004B8D; font-size: 18pt; 
-            font-weight: bold; text-transform: uppercase; margin: 0 0 20px 0; 
-        }
-
+        .main-title { text-align: center; color: #004B8D; font-size: 18pt; font-weight: bold; text-transform: uppercase; margin: 0 0 20px 0; }
+        
         .info-table { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 20px; }
         .info-table td { padding: 6px 8px; border: 1px solid #ccc; vertical-align: middle; }
         .label-cell { background-color: #f2f2f2; font-weight: bold; color: #000; font-size: 9pt; width: 25%; }
         .input-cell { background-color: #fff; color: #000; font-size: 10pt; }
         .header-sig-img { height: 45px; display: block; margin: 0 auto; }
-
-        .instructions { text-align: right; font-size: 7pt; color: #666; margin-bottom: 5px; }
         
         table.checklist { width: 100%; border-collapse: collapse; margin-top: 0; }
         .header-blue { background-color: #004B8D; color: white; text-align: center; font-weight: bold; padding: 8px; text-transform: uppercase; font-size: 10pt; }
         .header-black th { background-color: #000; color: white; font-weight: bold; font-size: 8pt; padding: 6px; text-align: center; border: 1px solid #000; }
         .checklist td { border: 1px solid #ddd; padding: 8px 5px; vertical-align: middle; }
         .col-idx { width: 5%; text-align: center; color: #888; font-size: 9pt; }
-        .col-item { width: 50%; }
-        .col-ar { width: 10%; text-align: center; font-weight: bold; font-size: 11pt; }
+        .col-ar { width: 10%; text-align: center; font-weight: bold; font-size: 11pt;}
         .col-obs { width: 35%; font-size: 9pt; }
-        .status-A { color: #009933; } 
-        .status-R { color: #cc0000; } 
-        .status-NA { color: #666666; } 
-
+        .status-A { color: #009933; } .status-R { color: #cc0000; } .status-NA { color: #666666; } 
+        
         .obs-section { margin-top: 20px; }
         .obs-title { background-color: #f2f2f2; border: 1px solid #ccc; border-bottom: none; font-weight: bold; font-size: 9pt; padding: 5px 10px; display: inline-block; }
         .obs-box { width: 100%; padding: 10px; border: 1px solid #ccc; font-size: 10pt; min-height: 40px; background-color: #fff; box-sizing: border-box; }
+        .instructions { text-align: right; font-size: 7pt; color: #666; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -96,11 +70,7 @@
                         <strong>REV:</strong> {{ revision }} | <strong>FECHA:</strong> {{ fecha_rev }}
                     </div>
                 </td>
-                <td>
-                    <div class="logo-container">
-                        <img src="{{ logo_b64 }}" class="logo-img">
-                    </div>
-                </td>
+                <td><div class="logo-container"><img src="{{ logo_b64 }}" class="logo-img"></div></td>
             </tr>
         </table>
     </div>
@@ -117,48 +87,31 @@
         </div>
     </div>
 
-    <div class="main-title">
-        CHECKLIST INSPECCIÓN<br>HERRAMIENTAS MANUALES
-    </div>
+    <div class="main-title">CHECKLIST INSPECCIÓN<br>HERRAMIENTAS MANUALES</div>
 
     <table class="info-table">
         <tr>
-            <td class="label-cell">PROYECTO / UBICACIÓN:</td>
-            <td class="input-cell" colspan="3">{{ proyecto }}</td>
+            <td class="label-cell">PROYECTO / UBICACIÓN:</td><td class="input-cell" colspan="3">{{ proyecto }}</td>
         </tr>
         <tr>
-            <td class="label-cell">INSPECCIÓN REALIZADA POR:</td>
-            <td class="input-cell">{{ inspector }}</td>
-            <td class="label-cell" style="width: 15%;">FECHA:</td>
-            <td class="input-cell" style="width: 20%; text-align: center;">{{ fecha_chequeo }}</td>
+            <td class="label-cell">INSPECCIÓN REALIZADA POR:</td><td class="input-cell">{{ inspector }}</td>
+            <td class="label-cell" style="width: 15%;">FECHA:</td><td class="input-cell" style="width: 20%; text-align: center;">{{ fecha_chequeo }}</td>
         </tr>
         <tr>
             <td class="label-cell">FIRMA INSPECTOR:</td>
             <td class="input-cell" colspan="3" style="height: 50px; text-align: left;">
-                {% if firma_b64 %}
-                    <img src="{{ firma_b64 }}" class="header-sig-img" style="margin: 0; margin-left: 20px;">
-                {% else %}
-                    <span style="color: #ccc; font-size: 8pt;">(Sin Firma)</span>
-                {% endif %}
+                {% if firma_b64 %}<img src="{{ firma_b64 }}" class="header-sig-img" style="margin: 0; margin-left: 20px;">
+                {% else %}<span style="color: #ccc; font-size: 8pt;">(Sin Firma)</span>{% endif %}
             </td>
         </tr>
     </table>
 
-    <div class="instructions">
-        ESTADOS: <strong>A</strong> = APROBADO | <strong>R</strong> = RECHAZADO | <strong>NA</strong> = NO APLICA
-    </div>
+    <div class="instructions">ESTADOS: <strong>A</strong> = APROBADO | <strong>R</strong> = RECHAZADO | <strong>NA</strong> = NO APLICA</div>
 
     <table class="checklist">
         <thead>
-            <tr>
-                <td colspan="4" class="header-blue">CONDICIONES A VERIFICAR</td>
-            </tr>
-            <tr class="header-black">
-                <th>#</th>
-                <th>ITEM</th>
-                <th>ESTADO</th>
-                <th>OBSERVACIONES</th>
-            </tr>
+            <tr><td colspan="4" class="header-blue">CONDICIONES A VERIFICAR</td></tr>
+            <tr class="header-black"><th>#</th><th>ITEM</th><th>ESTADO</th><th>OBSERVACIONES</th></tr>
         </thead>
         <tbody>
             {% for item in items %}
@@ -174,9 +127,7 @@
 
     <div class="obs-section">
         <div class="obs-title">OBSERVACIONES GENERALES</div>
-        <div class="obs-box">
-            {{ observaciones_generales }}
-        </div>
+        <div class="obs-box">{{ observaciones_generales }}</div>
     </div>
 
 </body>

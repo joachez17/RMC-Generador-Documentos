@@ -5,13 +5,15 @@
     <title>AST RMC Completo</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* === 1. CONFIGURACIÓN DE PÁGINA === */
+        /* === 1. CONFIGURACIÓN DE LA HOJA (LA CLAVE) === */
         @page { 
             size: A4; 
             margin-left: 1cm; 
             margin-right: 1cm;
+            /* Espacio reservado ARRIBA para el Logo (nadie escribe aquí) */
             margin-top: 3.5cm; 
-            margin-bottom: 3.5cm; /* Espacio amplio abajo para evitar choques */
+            /* Espacio reservado ABAJO para el Footer (nadie escribe aquí) */
+            margin-bottom: 3.5cm; 
         }
         
         body { 
@@ -21,46 +23,48 @@
             line-height: 1.2; 
         }
 
-        /* === 2. HEADER FIJO === */
+        /* === 2. HEADER FLOTANTE (Se repite en cada página) === */
         .header-fixed {
             position: fixed; 
-            top: -3cm; 
+            top: -3cm; /* Se ubica DENTRO del margen superior reservado */
             left: 0; 
             right: 0; 
-            height: 2.5cm;
-            background-color: white;
+            height: 2.8cm;
+            background-color: white; /* Fondo blanco para tapar cualquier fuga */
             z-index: 1000;
         }
 
-        /* === 3. FOOTER FIJO === */
+        /* === 3. FOOTER FLOTANTE (Se repite en cada página) === */
         .footer-fixed {
             position: fixed; 
-            bottom: -3cm; 
+            bottom: -3cm; /* Se ubica DENTRO del margen inferior reservado */
             left: 0; 
             right: 0; 
             height: 2.5cm;
+            /* Estilos de texto */
             text-align: center; 
-            font-size: 7pt; 
+            font-size: 8pt; 
             color: #777;
         }
 
-        .footer-company { font-weight: bold; color: #333; font-size: 8pt; margin-bottom: 2px; }
-        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
-
-        /* Estilos Generales */
-        .top-header-table { width: 100%; margin-bottom: 10px; }
-        .top-header-table td { vertical-align: top; }
+        /* === ESTILOS DE TU DISEÑO (Intactos) === */
+        .top-header-table { width: 100%; border: none; }
+        .top-header-table td { vertical-align: top; border: none; }
         .logo-img { width: 130px; float: right; }
         
+        .footer-company { font-weight: bold; color: #333; font-size: 9pt; margin-bottom: 2px; }
+        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
+
         .main-title { 
             text-align: center; color: #004B8D; font-size: 14pt; font-weight: bold; 
-            margin: 5px 0 15px 0; line-height: 1.1;
+            margin: 0 0 15px 0; line-height: 1.1;
         }
 
         .section-title {
             background-color: #004B8D; color: white; font-weight: bold; 
             padding: 4px 8px; font-size: 9pt; margin-top: 10px; margin-bottom: 4px;
             text-transform: uppercase;
+            page-break-after: avoid; /* Intenta no quedar solo al final de la hoja */
         }
 
         .info-table { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px; }
@@ -69,17 +73,18 @@
         .input-cell { background-color: #fff; }
         .center { text-align: center; }
 
-        .risk-grid { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px; }
-        .risk-grid td { padding: 3px; border: 1px solid #eee; width: 50%; }
-        .check-box {
-            display: inline-block; width: 9px; height: 9px; border: 1px solid #333; 
-            margin-right: 5px; text-align: center; line-height: 8px; font-size: 8px; font-weight: bold;
-        }
-
+        /* TABLA LARGA (AST) */
         table.data-grid { width: 100%; border-collapse: collapse; margin-top: 5px; }
         .header-blue { background-color: #004B8D; color: white; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #000; }
         .header-sub { background-color: #fff; color: #000; text-align: center; font-weight: bold; font-size: 7pt; padding: 2px; border: 1px solid #000; }
         .data-grid td { border: 1px solid #999; padding: 4px; vertical-align: top; }
+        
+        /* Asegura que las filas de la tabla no se corten por la mitad */
+        tr { page-break-inside: avoid; }
+
+        .risk-grid { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px; }
+        .risk-grid td { padding: 3px; border: 1px solid #eee; width: 50%; }
+        .check-box { display: inline-block; width: 9px; height: 9px; border: 1px solid #333; margin-right: 5px; text-align: center; line-height: 8px; font-size: 8px; font-weight: bold; }
         .sig-img { height: 35px; display: block; margin: 0 auto; }
         .rev-box { border: 1px solid #999; padding: 5px; margin-bottom: 5px; min-height: 30px; }
 
