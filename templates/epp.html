@@ -1,47 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <title>Entrega EPP RMC</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Roboto', sans-serif; font-size: 11pt; }
-        .header { text-align: center; margin-bottom: 20px; border: 1px solid #333; padding: 10px; }
-        .legal-text { font-size: 9pt; font-style: italic; margin-bottom: 15px; }
-        .data-table { width: 100%; margin-bottom: 20px; }
-        .data-table td { padding: 5px; }
+        @page { size: A4; margin: 1cm; margin-bottom: 2cm; margin-top: 1cm; }
+        body { font-family: 'Roboto', sans-serif; font-size: 10pt; color: #333; }
+        
+        .top-header-table { width: 100%; margin-bottom: 20px; }
+        .logo-img { width: 140px; float: right; }
+        .main-title { text-align: center; color: #004B8D; font-size: 16pt; font-weight: bold; margin-bottom: 5px; }
+        .subtitle { text-align: center; font-size: 9pt; color: #555; margin-bottom: 20px; }
+
+        .legal-box { 
+            border: 1px solid #ccc; background-color: #f9f9f9; padding: 10px; 
+            font-size: 9pt; font-style: italic; text-align: justify; margin-bottom: 20px; 
+        }
+
+        .info-table { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 20px; }
+        .info-table td { padding: 8px; border: 1px solid #ccc; }
+        .label-cell { background-color: #f2f2f2; font-weight: bold; width: 15%; }
+        
         .epp-table { width: 100%; border-collapse: collapse; }
-        .epp-table th, .epp-table td { border: 1px solid #333; padding: 6px; text-align: center; }
-        .firma-box { text-align: center; margin-top: 50px; }
+        .epp-table th { background-color: #004B8D; color: white; padding: 8px; border: 1px solid #000; }
+        .epp-table td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+        
+        .footer { position: fixed; bottom: -30px; left: 0; right: 0; text-align: center; font-size: 8pt; color: #777; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <img src="{{ logo_b64 }}" width="150"><br>
-        <h3>COMPROBANTE DE ENTREGA DE EPP</h3>
-        99200-SIGOP-R6506
+    <table class="top-header-table">
+        <tr>
+            <td>
+                <div style="font-size: 8pt;">
+                    <strong>CÓDIGO:</strong> 99200-SIGOP-R6506<br>
+                    <strong>REV:</strong> 11/06/25
+                </div>
+            </td>
+            <td><img src="{{ logo_b64 }}" class="logo-img"></td>
+        </tr>
+    </table>
+
+    <div class="main-title">ENTREGA DE EPP</div>
+    
+    <div class="legal-box">
+        "De acuerdo a lo estipulado en la Ley 16.744, Art. 68 inciso tres: Las empresas deberán proporcionar a sus trabajadores, los equipos e implementos de protección necesarios, no pudiendo en caso alguno cobrarles su valor."
     </div>
 
-    <p class="legal-text">
-        "De acuerdo a lo estipulado en la Ley 16.744, Art. 68: Las empresas deberán proporcionar a sus trabajadores, los equipos e implementos de protección necesarios, no pudiendo en caso alguno cobrarles su valor."
-    </p>
-
-    <table class="data-table">
+    <table class="info-table">
         <tr>
-            <td><b>Nombre:</b> {{ nombre }}</td>
-            <td><b>RUT:</b> {{ rut }}</td>
-            <td><b>Cargo:</b> {{ cargo }}</td>
+            <td class="label-cell">NOMBRE:</td>
+            <td>{{ nombre }}</td>
+            <td class="label-cell">RUT:</td>
+            <td>{{ rut }}</td>
         </tr>
         <tr>
-            <td colspan="3"><b>Fecha Entrega:</b> {{ fecha }}</td>
+            <td class="label-cell">CARGO:</td>
+            <td>{{ cargo }}</td>
+            <td class="label-cell">FECHA:</td>
+            <td>{{ fecha }}</td>
         </tr>
     </table>
 
     <table class="epp-table">
         <thead>
-            <tr style="background-color: #ddd;">
-                <th>EPP / ROPA</th>
-                <th>TALLA</th>
-                <th>CANT.</th>
-                <th>TIPO</th>
+            <tr>
+                <th style="width: 40%;">EPP / ROPA CORPORATIVA</th>
+                <th style="width: 15%;">TALLA</th>
+                <th style="width: 15%;">CANT.</th>
+                <th style="width: 15%;">TIPO</th>
+                <th style="width: 15%;">FIRMA</th>
             </tr>
         </thead>
         <tbody>
@@ -51,19 +80,31 @@
                 <td>{{ item.TALLA }}</td>
                 <td>{{ item.CANT }}</td>
                 <td>{% if item.REPOSICIÓN %}Reposición{% else %}Nuevo{% endif %}</td>
+                <td>OK</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <div class="firma-box">
-        <p>Declaro haber recibido los elementos detallados en buen estado.</p>
+    <div style="margin-top: 50px; text-align: center;">
+        <p style="font-size: 9pt;">El trabajador se compromete a mantener los elementos de protección personal en buen estado y declara haberlos recibido en forma gratuita.</p>
+        
         {% if firma_b64 %}
-            <img src="{{ firma_b64 }}" width="200" style="border-bottom: 1px solid black;">
+            <img src="{{ firma_b64 }}" style="height: 60px; border-bottom: 1px solid black; margin-top: 20px;">
         {% else %}
-            <br><br><br>__________________________
+            <br><br><br><br><hr style="width: 40%;">
         {% endif %}
-        <p><b>{{ nombre }}</b><br>Firma del Trabajador</p>
+        <p><b>FIRMA DEL TRABAJADOR</b><br>{{ nombre }}</p>
+    </div>
+
+    <div class="footer">
+        <div class="footer-company">RMC CORPORATE</div>
+        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
+        <div>
+            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
+            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
+            Correo: <span class="footer-link">contacto@rmc.cl</span>
+        </div>
     </div>
 </body>
 </html>

@@ -1,67 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Roboto', sans-serif; font-size: 11pt; color: #333; }
-        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .header-table td { border: 1px solid #333; padding: 8px; vertical-align: middle; }
-        .title { font-weight: bold; font-size: 14pt; text-align: center; }
-        .info-row { margin-bottom: 15px; }
-        .main-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .main-table th, .main-table td { border: 1px solid #333; padding: 5px; text-align: left; font-size: 10pt; }
-        .cat-row { background-color: #e0e0e0; font-weight: bold; }
-        .footer { margin-top: 30px; width: 100%; }
-        .firmas { width: 100%; margin-top: 40px; }
-        .firmas td { width: 50%; text-align: center; vertical-align: top; }
-        .img-firma { height: 60px; border-bottom: 1px solid black; display: block; margin: 0 auto; width: 150px; }
+        /* CONFIGURACIÓN DE PÁGINA PARA REPETICIÓN DE HEADER */
+        @page { 
+            size: A4; 
+            margin-left: 1cm; margin-right: 1cm;
+            margin-top: 3.5cm; /* Espacio reservado para el logo en cada página */
+            margin-bottom: 2cm; /* Espacio reservado para el footer en cada página */
+        }
+        body { font-family: 'Roboto', sans-serif; font-size: 10pt; color: #333; }
+        
+        /* HEADER FIJO (Se repite en todas las páginas) */
+        .header-fixed {
+            position: fixed; top: -2.5cm; left: 0; right: 0; height: 3cm;
+            border-bottom: 2px solid #004B8D;
+            background-color: white; /* Para tapar contenido si pasa por debajo */
+        }
+        .header-table { width: 100%; border: none; }
+        .logo-img { width: 130px; float: right; }
+        .meta-info { font-size: 8pt; color: #555; }
+
+        /* FOOTER FIJO (Se repite en todas las páginas) */
+        .footer-fixed {
+            position: fixed; bottom: -1.5cm; left: 0; right: 0; height: 1cm;
+            text-align: center; font-size: 8pt; color: #777;
+            border-top: 1px solid #ccc; padding-top: 5px;
+        }
+
+        /* CONTENIDO PRINCIPAL */
+        .main-title { text-align: center; color: #004B8D; font-size: 16pt; font-weight: bold; margin-bottom: 20px; }
+        .info-table { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 20px; }
+        .info-table td { padding: 5px; border: 1px solid #ccc; font-size: 9pt; }
+        .label-cell { background-color: #f2f2f2; font-weight: bold; width: 18%; }
+        
+        /* TABLA CHECKLIST */
+        table.checklist { width: 100%; border-collapse: collapse; }
+        .header-blue { background-color: #004B8D; color: white; padding: 5px; font-weight: bold; text-align: center; }
+        .checklist th { background-color: #000; color: white; padding: 5px; font-size: 8pt; }
+        .checklist td { border: 1px solid #ccc; padding: 5px; vertical-align: middle; }
+        .sig-img { height: 40px; display: block; margin: 0 auto; }
     </style>
 </head>
 <body>
-    <table class="header-table">
+    <div class="header-fixed">
+        <table class="header-table">
+            <tr>
+                <td>
+                    <div class="meta-info">
+                        <strong>CÓDIGO:</strong> 99300-SIGOP-R6517<br>
+                        <strong>REV:</strong> 2 | <strong>FECHA:</strong> 11/06/25
+                    </div>
+                </td>
+                <td><img src="{{ logo_b64 }}" class="logo-img"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        <div class="footer-company">RMC CORPORATE</div>
+        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
+        <div>
+            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
+            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
+            Correo: <span class="footer-link">contacto@rmc.cl</span>
+        </div>
+    </div>
+
+    <div class="main-title">CHECKLIST INSPECCIÓN ARNÉS DE SEGURIDAD</div>
+
+    <table class="info-table">
         <tr>
-            <td width="20%"><img src="{{ logo_b64 }}" width="120"></td>
-            <td class="title">CHECKLIST INSPECCIÓN ARNÉS DE SEGURIDAD<br><span style="font-size:10pt;">99300-SIGOP-R6517 Rev. 2</span></td>
+            <td class="label-cell">ID EQUIPO:</td>
+            <td>{{ id_equipo }}</td>
+            <td class="label-cell">FECHA:</td>
+            <td>{{ fecha }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">COLABORADOR:</td>
+            <td>{{ colaborador }}</td>
+            <td class="label-cell">CARGO:</td>
+            <td>{{ cargo }}</td>
         </tr>
     </table>
 
-    <div class="info-row">
-        <b>ID Equipo:</b> {{ id_equipo }} &nbsp;|&nbsp; <b>Fecha:</b> {{ fecha }}<br>
-        <b>Colaborador:</b> {{ colaborador }} &nbsp;|&nbsp; <b>Cargo:</b> {{ cargo }}
-    </div>
-
-    <table class="main-table">
+    <table class="checklist">
         <thead>
-            <tr style="background-color: #333; color: white;">
-                <th>CATEGORÍA / ITEM</th>
-                <th width="10%">A/R</th>
-                <th width="30%">OBSERVACIÓN</th>
+            <tr><td colspan="3" class="header-blue">CONDICIONES A VERIFICAR</td></tr>
+            <tr>
+                <th style="width: 50%;">ITEM / CRITERIO</th>
+                <th style="width: 10%;">A/R</th>
+                <th style="width: 40%;">OBSERVACIÓN</th>
             </tr>
         </thead>
         <tbody>
             {% for item in items %}
             <tr>
                 <td><b>{{ item.CAT }}</b><br>{{ item.ITEM }}</td>
-                <td style="text-align: center;">{{ item['A/R'] }}</td>
+                <td style="text-align: center; font-weight: bold;">{{ item['A/R'] }}</td>
                 <td>{{ item.OBS }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <div style="margin-top: 10px; font-size: 9pt;">
-        * Ante cualquier rechazo (R) NO se debe utilizar este arnés.
+    <div style="font-size: 8pt; margin-top: 10px; color: #cc0000; font-weight: bold;">
+        * ANTE CUALQUIER RECHAZO (R) NO SE DEBE UTILIZAR ESTE ARNÉS.
     </div>
 
-    <table class="firmas">
+    <table style="width: 100%; margin-top: 30px; text-align: center;">
         <tr>
-            <td>
-                {% if firma_user %}<img src="{{ firma_user }}" class="img-firma">{% else %}<br><br><br>{% endif %}
-                <p>INSPECCIÓN REALIZADA<br>{{ colaborador }}</p>
+            <td style="width: 50%;">
+                {% if firma_user %}<img src="{{ firma_user }}" class="sig-img">{% else %}<br><br>{% endif %}
+                <hr style="width: 60%;">
+                <b>INSPECCIÓN REALIZADA</b><br>{{ colaborador }}
             </td>
-            <td>
-                {% if firma_sup %}<img src="{{ firma_sup }}" class="img-firma">{% else %}<br><br><br>{% endif %}
-                <p>INSPECCIÓN VALIDADA<br>Supervisor</p>
+            <td style="width: 50%;">
+                {% if firma_sup %}<img src="{{ firma_sup }}" class="sig-img">{% else %}<br><br>{% endif %}
+                <hr style="width: 60%;">
+                <b>INSPECCIÓN VALIDADA</b><br>Supervisor
             </td>
         </tr>
     </table>

@@ -3,37 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <title>AST RMC Completo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* === CONFIGURACIÓN DE PÁGINA === */
-        @page { size: A4; margin: 1cm; margin-bottom: 2cm; margin-top: 1cm; }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 8pt; color: #333; line-height: 1.2; }
+        /* === CONFIGURACIÓN DE PÁGINA (Paginación) === */
+        @page { 
+            size: A4; 
+            margin-left: 1cm; 
+            margin-right: 1cm;
+            margin-top: 3.5cm; 
+            margin-bottom: 2.5cm;
+        }
         
-        /* HEADER */
+        body { 
+            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif; 
+            font-size: 8pt; 
+            color: #333; 
+            line-height: 1.2; 
+        }
+        
+        /* === HEADER FIJO === */
+        .header-fixed {
+            position: fixed; top: -3cm; left: 0; right: 0; height: 3cm; background-color: white;
+        }
+
+        /* === FOOTER FIJO === */
+        .footer-fixed {
+            position: fixed; bottom: -2cm; left: 0; right: 0; height: 2cm;
+            text-align: center; font-size: 7pt; color: #777;
+        }
+
+        /* ESTILOS ORIGINALES DE TU DISEÑO */
         .top-header-table { width: 100%; margin-bottom: 10px; }
         .top-header-table td { vertical-align: top; }
         .logo-img { width: 130px; float: right; }
+        
+        .footer-company { font-weight: bold; color: #333; font-size: 8pt; margin-bottom: 2px; }
+        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
+
         .main-title { 
             text-align: center; color: #004B8D; font-size: 14pt; font-weight: bold; 
             margin: 5px 0 15px 0; line-height: 1.1;
         }
 
-        /* === ESTILOS "FICHA TÉCNICA" (BOXED) === */
         .section-title {
             background-color: #004B8D; color: white; font-weight: bold; 
             padding: 4px 8px; font-size: 9pt; margin-top: 10px; margin-bottom: 4px;
             text-transform: uppercase;
         }
 
-        .info-table { 
-            width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px;
-        }
+        .info-table { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px; }
         .info-table td { padding: 3px 5px; border: 1px solid #ccc; vertical-align: middle; }
-        
         .label-cell { background-color: #f2f2f2; font-weight: bold; color: #000; width: 18%; }
         .input-cell { background-color: #fff; }
         .center { text-align: center; }
 
-        /* GRID DE CHECKBOXES (SECCIÓN 2) */
         .risk-grid { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px; }
         .risk-grid td { padding: 3px; border: 1px solid #eee; width: 50%; }
         .check-box {
@@ -41,38 +64,40 @@
             margin-right: 5px; text-align: center; line-height: 8px; font-size: 8px; font-weight: bold;
         }
 
-        /* TABLAS DE DATOS (SECCIÓN 3, 4, 6) */
         table.data-grid { width: 100%; border-collapse: collapse; margin-top: 5px; }
         .header-blue { background-color: #004B8D; color: white; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #000; }
         .header-sub { background-color: #fff; color: #000; text-align: center; font-weight: bold; font-size: 7pt; padding: 2px; border: 1px solid #000; }
-        
         .data-grid td { border: 1px solid #999; padding: 4px; vertical-align: top; }
-        
-        /* Firmas */
         .sig-img { height: 35px; display: block; margin: 0 auto; }
-
-        /* REVISIONES (SECCIÓN 7) */
         .rev-box { border: 1px solid #999; padding: 5px; margin-bottom: 5px; min-height: 30px; }
-
-        /* Footer */
-        .footer { position: fixed; bottom: -30px; left: 0; right: 0; text-align: center; font-size: 7pt; color: #777; }
-        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
 
     </style>
 </head>
 <body>
 
-    <table class="top-header-table">
-        <tr>
-            <td>
-                <div style="font-size: 8pt; color: #555;">
-                    <strong>CÓDIGO:</strong> 24931-SIGOP-R6503<br>
-                    <strong>REV:</strong> 2 | <strong>FECHA:</strong> 11/06/25
-                </div>
-            </td>
-            <td><img src="{{ logo_b64 }}" class="logo-img"></td>
-        </tr>
-    </table>
+    <div class="header-fixed">
+        <table class="top-header-table">
+            <tr>
+                <td>
+                    <div style="font-size: 8pt; color: #555;">
+                        <strong>CÓDIGO:</strong> 24931-SIGOP-R6503<br>
+                        <strong>REV:</strong> 2 | <strong>FECHA:</strong> 11/06/25
+                    </div>
+                </td>
+                <td><img src="{{ logo_b64 }}" class="logo-img"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer-fixed">
+        <div class="footer-company">RMC CORPORATE</div>
+        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
+        <div>
+            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
+            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
+            Correo: <span class="footer-link">contacto@rmc.cl</span>
+        </div>
+    </div>
 
     <div class="main-title">ANÁLISIS SEGURO DE TRABAJO (AST)<br>Y CHARLA PREVIA DE SEGURIDAD</div>
 
@@ -111,7 +136,6 @@
     </table>
 
     <div class="section-title">2. PLANIFICACIÓN DEL TRABAJO</div>
-    
     <table class="info-table">
         <tr>
             <td class="label-cell">EPPS ESPECÍFICOS:</td>
@@ -264,16 +288,6 @@
     </div>
     <div class="rev-box">
         <strong>2° Revisión:</strong> {{ revision_2 }}
-    </div>
-
-    <div class="footer">
-        <div class="footer-company">RMC CORPORATE</div>
-        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
-        <div>
-            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
-            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
-            Correo: <span class="footer-link">contacto@rmc.cl</span>
-        </div>
     </div>
 
 </body>
