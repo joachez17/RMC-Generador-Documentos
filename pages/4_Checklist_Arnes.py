@@ -93,14 +93,21 @@ items_data = [
     {"CAT": "1. CONDICIÓN DEL TEJIDO", "ITEM": "1.2 Costuras, cortes o rotura del tejido", "A/R": "A", "OBS": ""},
     {"CAT": "1. CONDICIÓN DEL TEJIDO", "ITEM": "1.3 Fibras externas cortadas/desgastadas", "A/R": "A", "OBS": ""},
     {"CAT": "1. CONDICIÓN DEL TEJIDO", "ITEM": "1.4 Quemaduras", "A/R": "A", "OBS": ""},
+    {"CAT": "1. CONDICIÓN DEL TEJIDO", "ITEM": "1.5 Deterioro general", "A/R": "A", "OBS": ""},
     {"CAT": "2. ARGOLLAS", "ITEM": "2.1 Defectos de funcionamiento", "A/R": "A", "OBS": ""},
     {"CAT": "2. ARGOLLAS", "ITEM": "2.2 Deformaciones, desgaste excesivo", "A/R": "A", "OBS": ""},
-    {"CAT": "2. ARGOLLAS", "ITEM": "2.3 Corrosión / Grietas", "A/R": "A", "OBS": ""},
+    {"CAT": "2. ARGOLLAS", "ITEM": "2.3 Corrosión", "A/R": "A", "OBS": ""},
+    {"CAT": "2. ARGOLLAS", "ITEM": "2.4 Grietas, trizaduras", "A/R": "A", "OBS": ""},
+    {"CAT": "2. ARGOLLAS", "ITEM": "2.5 Defectos de funcionamiento", "A/R": "A", "OBS": ""},
     {"CAT": "3. COLAS DE VIDA", "ITEM": "3.1 Estiramiento o elongación excesivos", "A/R": "A", "OBS": ""},
     {"CAT": "3. COLAS DE VIDA", "ITEM": "3.2 Desgaste, deformación o desgarro", "A/R": "A", "OBS": ""},
-    {"CAT": "3. COLAS DE VIDA", "ITEM": "3.3 Cortes, rotura tejido, quemaduras", "A/R": "A", "OBS": ""},
+    {"CAT": "3. COLAS DE VIDA", "ITEM": "3.3 Cortes, rotura tejido", "A/R": "A", "OBS": ""},
+    {"CAT": "3. COLAS DE VIDA", "ITEM": "3.3 Quemaduras", "A/R": "A", "OBS": ""},
     {"CAT": "4. CUERDAS DE VIDA", "ITEM": "4.1 Fibras cortadas o deshilachadas", "A/R": "A", "OBS": ""},
-    {"CAT": "4. CUERDAS DE VIDA", "ITEM": "4.2 Estiramiento excesivo / Deterioro", "A/R": "A", "OBS": ""}
+    {"CAT": "4. CUERDAS DE VIDA", "ITEM": "4.2 Estiramiento o elongación excesivos", "A/R": "A", "OBS": ""},
+    {"CAT": "4. CUERDAS DE VIDA", "ITEM": "4.3 Extremo libre deshilachado", "A/R": "A", "OBS": ""},
+    {"CAT": "4. CUERDAS DE VIDA", "ITEM": "4.4 Corroído, desgarrado", "A/R": "A", "OBS": ""},
+    {"CAT": "4. CUERDAS DE VIDA", "ITEM": "4.5 Deterioro general", "A/R": "A", "OBS": ""},
 ]
 
 df = pd.DataFrame(items_data)
