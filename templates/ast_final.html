@@ -5,15 +5,15 @@
     <title>AST RMC Completo</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* === 1. CONFIGURACIÓN DE LA HOJA (LA CLAVE) === */
+        /* === 1. CONFIGURACIÓN DE LA HOJA (BLINDAJE DE MÁRGENES) === */
         @page { 
             size: A4; 
             margin-left: 1cm; 
             margin-right: 1cm;
-            /* Espacio reservado ARRIBA para el Logo (nadie escribe aquí) */
+            /* Espacio arriba para el Header */
             margin-top: 3.5cm; 
-            /* Espacio reservado ABAJO para el Footer (nadie escribe aquí) */
-            margin-bottom: 3.5cm; 
+            /* Espacio GIGANTE abajo para asegurar que la tabla frene antes del footer */
+            margin-bottom: 5cm; 
         }
         
         body { 
@@ -23,31 +23,42 @@
             line-height: 1.2; 
         }
 
-        /* === 2. HEADER FLOTANTE (Se repite en cada página) === */
+        /* === 2. HEADER FLOTANTE === */
         .header-fixed {
             position: fixed; 
-            top: -3cm; /* Se ubica DENTRO del margen superior reservado */
+            top: -3cm; /* Se ubica en el margen superior */
             left: 0; 
             right: 0; 
             height: 2.8cm;
-            background-color: white; /* Fondo blanco para tapar cualquier fuga */
+            background-color: white;
             z-index: 1000;
         }
 
-        /* === 3. FOOTER FLOTANTE (Se repite en cada página) === */
+        /* === 3. FOOTER FLOTANTE === */
         .footer-fixed {
             position: fixed; 
-            bottom: -3cm; /* Se ubica DENTRO del margen inferior reservado */
+            /* Lo ubicamos bien abajo, dentro del margen de 5cm */
+            bottom: -4cm; 
             left: 0; 
             right: 0; 
-            height: 2.5cm;
-            /* Estilos de texto */
+            height: 3cm;
             text-align: center; 
             font-size: 8pt; 
             color: #777;
         }
 
-        /* === ESTILOS DE TU DISEÑO (Intactos) === */
+        /* === 4. REGLA DE ORO PARA TABLAS === */
+        /* Esto evita que una fila se corte a la mitad y cause errores visuales */
+        tr { 
+            page-break-inside: avoid; 
+        }
+        
+        /* Asegura que los encabezados azules se repitan si la tabla salta de página */
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+
+
+        /* === ESTILOS DE TU DISEÑO === */
         .top-header-table { width: 100%; border: none; }
         .top-header-table td { vertical-align: top; border: none; }
         .logo-img { width: 130px; float: right; }
@@ -64,7 +75,6 @@
             background-color: #004B8D; color: white; font-weight: bold; 
             padding: 4px 8px; font-size: 9pt; margin-top: 10px; margin-bottom: 4px;
             text-transform: uppercase;
-            page-break-after: avoid; /* Intenta no quedar solo al final de la hoja */
         }
 
         .info-table { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px; }
@@ -73,14 +83,11 @@
         .input-cell { background-color: #fff; }
         .center { text-align: center; }
 
-        /* TABLA LARGA (AST) */
+        /* TABLA DEL AST */
         table.data-grid { width: 100%; border-collapse: collapse; margin-top: 5px; }
         .header-blue { background-color: #004B8D; color: white; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #000; }
         .header-sub { background-color: #fff; color: #000; text-align: center; font-weight: bold; font-size: 7pt; padding: 2px; border: 1px solid #000; }
         .data-grid td { border: 1px solid #999; padding: 4px; vertical-align: top; }
-        
-        /* Asegura que las filas de la tabla no se corten por la mitad */
-        tr { page-break-inside: avoid; }
 
         .risk-grid { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 5px; }
         .risk-grid td { padding: 3px; border: 1px solid #eee; width: 50%; }
@@ -180,6 +187,7 @@
     </table>
 
     <div class="section-title">3. ANÁLISIS SEGURO DEL TRABAJO</div>
+    
     <table class="data-grid">
         <thead>
             <tr>
