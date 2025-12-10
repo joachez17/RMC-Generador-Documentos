@@ -10,8 +10,8 @@
             size: A4; 
             margin-left: 1cm; 
             margin-right: 1cm;
-            margin-top: 3.5cm; /* Espacio para Header */
-            margin-bottom: 3cm; /* Espacio para Footer */
+            margin-top: 3.5cm; 
+            margin-bottom: 3.5cm; /* Espacio amplio abajo para evitar choques */
         }
         
         body { 
@@ -24,7 +24,7 @@
         /* === 2. HEADER FIJO === */
         .header-fixed {
             position: fixed; 
-            top: -2.8cm; 
+            top: -3cm; 
             left: 0; 
             right: 0; 
             height: 2.5cm;
@@ -33,17 +33,15 @@
         }
 
         /* === 3. FOOTER FIJO === */
-        .footer {
+        .footer-fixed {
             position: fixed; 
-            bottom: -2.5cm; 
+            bottom: -3cm; 
             left: 0; 
             right: 0; 
-            height: 2cm;
+            height: 2.5cm;
             text-align: center; 
             font-size: 7pt; 
             color: #777;
-            border-top: 1px solid #ccc;
-            padding-top: 5px;
         }
 
         .footer-company { font-weight: bold; color: #333; font-size: 8pt; margin-bottom: 2px; }
@@ -103,13 +101,15 @@
         </table>
     </div>
 
-    <div class="footer">
-        <div class="footer-company">RMC CORPORATE</div>
-        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
-        <div>
-            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
-            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
-            Correo: <span class="footer-link">contacto@rmc.cl</span>
+    <div class="footer-fixed">
+        <div style="border-top: 1px solid #ccc; padding-top: 5px;">
+            <div class="footer-company">RMC CORPORATE</div>
+            <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
+            <div>
+                Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
+                Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
+                Correo: <span class="footer-link">contacto@rmc.cl</span>
+            </div>
         </div>
     </div>
 
