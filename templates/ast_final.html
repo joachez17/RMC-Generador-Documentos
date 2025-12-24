@@ -11,7 +11,7 @@
             margin-left: 1cm; 
             margin-right: 1cm;
             margin-top: 3.5cm; 
-            /* AUMENTADO: Obligamos al contenido a detenerse 4.5cm antes del final */
+            /* Mantenemos el margen amplio para proteger el footer */
             margin-bottom: 4.5cm; 
         }
         
@@ -19,35 +19,48 @@
             font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif; 
             font-size: 8pt; 
             color: #333; 
-            line-height: 1.2; 
+            line-height: 1.2;
         }
 
-        /* === 2. HEADER FIJO === */
-        .header-fixed {
-            position: fixed; 
-            top: -3cm; 
-            left: 0; 
-            right: 0; 
-            height: 2.8cm;
-            background-color: white;
-            z-index: 1000;
+        /* === REGLAS CRÍTICAS PARA TABLAS EN WEASYPRINT === */
+        table {
+            /* Permite que la tabla se rompa entre páginas */
+            page-break-inside: auto;
+            width: 100%;
+        }
+        
+        tr {
+            /* Evita que una fila de texto se corte por la mitad */
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        
+        thead {
+            /* OBLIGATORIO: Repite el encabezado azul en la siguiente página */
+            display: table-header-group;
         }
 
-        /* === 3. FOOTER FIJO (CORREGIDO) === */
+        tfoot {
+            /* Opcional: Ayuda al motor a calcular el cierre de la tabla */
+            display: table-footer-group;
+        }
+
+        /* === 3. FOOTER FIJO === */
         .footer-fixed {
             position: fixed; 
-            /* Lo colocamos dentro del margen, dejando 1cm de separación con el contenido */
-            bottom: -3.5cm; 
+            /* Ajuste: Lo subimos un poco para asegurar que no se salga de la hoja */
+            bottom: -4cm; 
             left: 0; 
             right: 0; 
-            height: 3cm;
+            height: 3.5cm; /* Altura suficiente */
             text-align: center; 
             font-size: 8pt; 
             color: #777;
-            /* El fondo blanco tapa cualquier línea de tabla que intente pasarse */
+            /* Fondo blanco y borde para "tapar" si la tabla se pasa unos milímetros */
             background-color: white; 
-            z-index: 1000; 
+            border-top: 1px solid #ccc;
             padding-top: 5px;
+            z-index: 9999; /* Prioridad máxima de visualización */
         }
 
         /* ESTILOS GENERALES (INTACTOS) */
@@ -76,7 +89,7 @@
         .center { text-align: center; }
 
         /* TABLA AST */
-        table.data-grid { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        table.data-grid { width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 20px; }
         .header-blue { background-color: #004B8D; color: white; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #000; }
         .header-sub { background-color: #fff; color: #000; text-align: center; font-weight: bold; font-size: 7pt; padding: 2px; border: 1px solid #000; }
         .data-grid td { border: 1px solid #999; padding: 4px; vertical-align: top; }
