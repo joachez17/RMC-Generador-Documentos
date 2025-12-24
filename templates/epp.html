@@ -5,14 +5,42 @@
     <title>Entrega EPP RMC</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        @page { size: A4; margin: 1cm; margin-bottom: 2cm; margin-top: 1cm; }
-        body { font-family: 'Roboto', sans-serif; font-size: 10pt; color: #333; }
+        /* 1. RESERVAMOS ESPACIO EN LOS MÁRGENES */
+        @page { 
+            size: A4; 
+            margin-left: 1cm; 
+            margin-right: 1cm;
+            margin-top: 1cm; 
+            margin-bottom: 3.5cm; /* Espacio suficiente para que el footer no se solape con la tabla */
+        }
         
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            font-size: 10pt; 
+            color: #333; 
+        }
+        
+        /* 2. DEFINIMOS EL FOOTER FIJO */
+        .footer-fixed {
+            position: fixed; 
+            bottom: -3cm; /* Lo bajamos dentro del margen reservado */
+            left: 0; 
+            right: 0; 
+            height: 2.5cm;
+            text-align: center; 
+            font-size: 8pt; 
+            color: #777;
+            /* Fondo blanco para tapar líneas de tabla si llegaran a pasar por debajo */
+            background-color: white; 
+            padding-top: 5px;
+            border-top: 1px solid #ccc;
+        }
+
+        /* Estilos generales */
         .top-header-table { width: 100%; margin-bottom: 20px; }
         .logo-img { width: 140px; float: right; }
         .main-title { text-align: center; color: #004B8D; font-size: 16pt; font-weight: bold; margin-bottom: 5px; }
-        .subtitle { text-align: center; font-size: 9pt; color: #555; margin-bottom: 20px; }
-
+        
         .legal-box { 
             border: 1px solid #ccc; background-color: #f9f9f9; padding: 10px; 
             font-size: 9pt; font-style: italic; text-align: justify; margin-bottom: 20px; 
@@ -22,14 +50,39 @@
         .info-table td { padding: 8px; border: 1px solid #ccc; }
         .label-cell { background-color: #f2f2f2; font-weight: bold; width: 15%; }
         
-        .epp-table { width: 100%; border-collapse: collapse; }
+        /* Tabla EPP */
+        .epp-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         .epp-table th { background-color: #004B8D; color: white; padding: 8px; border: 1px solid #000; }
         .epp-table td { border: 1px solid #ccc; padding: 6px; text-align: center; }
         
-        .footer { position: fixed; bottom: -30px; left: 0; right: 0; text-align: center; font-size: 8pt; color: #777; }
+        /* Para que el encabezado de la tabla se repita si salta de página */
+        thead { display: table-header-group; }
+        tr { page-break-inside: avoid; }
+
+        /* Estilos del Footer internos */
+        .footer-company { font-weight: bold; color: #333; font-size: 9pt; margin-bottom: 2px; }
+        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
+
+        /* Bloque de firma */
+        .signature-block {
+            margin-top: 50px; 
+            text-align: center;
+            page-break-inside: avoid; /* Evita que la firma quede partida entre dos páginas */
+        }
     </style>
 </head>
 <body>
+
+    <div class="footer-fixed">
+        <div class="footer-company">RMC CORPORATE</div>
+        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
+        <div>
+            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
+            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
+            Correo: <span class="footer-link">contacto@rmc.cl</span>
+        </div>
+    </div>
+
     <table class="top-header-table">
         <tr>
             <td>
@@ -86,7 +139,7 @@
         </tbody>
     </table>
 
-    <div style="margin-top: 50px; text-align: center;">
+    <div class="signature-block">
         <p style="font-size: 9pt;">El trabajador se compromete a mantener los elementos de protección personal en buen estado y declara haberlos recibido en forma gratuita.</p>
         
         {% if firma_b64 %}
@@ -97,14 +150,5 @@
         <p><b>FIRMA DEL TRABAJADOR</b><br>{{ nombre }}</p>
     </div>
 
-    <div class="footer">
-        <div class="footer-company">RMC CORPORATE</div>
-        <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
-        <div>
-            Sitio Web: <span class="footer-link">www.rmccorporate.com</span> | 
-            Linkedin & YouTube: <span class="footer-link">RMC Corporate</span> | 
-            Correo: <span class="footer-link">contacto@rmc.cl</span>
-        </div>
-    </div>
 </body>
 </html>
