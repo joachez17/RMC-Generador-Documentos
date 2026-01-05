@@ -47,17 +47,18 @@
 
         /* === 3. FOOTER FIJO === */
         .footer-fixed {
-            position: fixed; 
-            /* Ajuste: Lo subimos un poco para asegurar que no se salga de la hoja */
-            bottom: -4cm; 
-            left: 0; 
-            right: 0; 
-            height: 3.5cm; /* Altura suficiente */
+            /* Esto saca el footer del flujo normal y lo convierte en un recurso */
+            position: running(footerHtml);
+            
+            /* Ya NO usamos bottom, left, right ni fixed */
+            width: 100%;
             text-align: center; 
             font-size: 8pt; 
             color: #777;
-            /* Fondo blanco y borde para "tapar" si la tabla se pasa unos milímetros */
-            background-color: white; 
+            padding-top: 5px;
+            /* El borde ayuda a separar visualmente */
+            border-top: 1px solid #ccc; 
+            background-color: white;
             border-top: 1px solid #ccc;
             padding-top: 5px;
             z-index: 9999; /* Prioridad máxima de visualización */
