@@ -8,6 +8,7 @@ from email.mime.text import MIMEText
 from email import encoders
 from datetime import date
 import os
+import time
 
 # CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Portal Supervisores", page_icon="📈", layout="wide")
@@ -17,7 +18,12 @@ USUARIO_ACTUAL = "Alioska Saavedra"
 PROYECTO_DEFAULT = "Minera Escondida"
 FILE_PATH = "data/Plan Personalizado de actividades SSO 2026 - Alioska Saavedra.xlsx"
 
-# --- 2. FUNCIONES DE ENVÍO ---
+# --- 2. MEMORIA TEMPORAL (SESSION STATE) ---
+# Esto permite que la App "recuerde" que subiste algo hoy, aunque no pueda editar el Excel
+if "avances_sesion" not in st.session_state:
+    st.session_state["avances_sesion"] = {}
+
+# --- 3. FUNCIONES DE ENVÍO ---
 def enviar_evidencia(foto, actividad, proyecto, usuario):
     try:
         smtp_server = st.secrets["email"]["smtp_server"]
@@ -51,7 +57,7 @@ def enviar_evidencia(foto, actividad, proyecto, usuario):
         st.error(f"Error enviando correo: {e}")
         return False
 
-# --- 3. CARGA DE DATOS INTELIGENTE ---
+# --- 4. CARGA DE DATOS ---
 st.title(f"📊 Portal de Cumplimiento: {USUARIO_ACTUAL}")
 
 try:
@@ -68,46 +74,46 @@ try:
         if header_row_idx is not None:
             df = pd.read_excel(FILE_PATH, header=header_row_idx)
         else:
-            st.error("❌ No encontré 'NOMBRE DE LA ACTIVIDAD' en el Excel.")
+            st.error("❌ No encontré 'NOMBRE DE LA ACTIVIDAD'.")
             st.stop()
     else:
         st.error(f"⚠️ Archivo no encontrado: {FILE_PATH}")
         st.stop()
 
-    # --- 4. RENOMBRAMIENTO ---
-    col_excel_actividad = "NOMBRE DE LA ACTIVIDAD"
-    col_excel_asig = "CANTIDAD ASIGNADA"
-    col_excel_real = "CANTIDAD REALIZADA"
-    col_excel_verif = "MEDIO DE VERIFICACIÓN"
+    # Renombramiento
+    col_act = "NOMBRE DE LA ACTIVIDAD"
+    col_asig = "CANTIDAD ASIGNADA"
+    col_real = "CANTIDAD REALIZADA"
+    col_verif = "MEDIO DE VERIFICACIÓN"
 
-    if col_excel_asig not in df.columns:
-        st.error(f"No encuentro la columna '{col_excel_asig}'.")
-        st.stop()
+    df = df.rename(columns={col_act: "Actividad", col_asig: "Programado", col_real: "Realizado", col_verif: "Verificacion"})
 
-    df = df.rename(columns={
-        col_excel_actividad: "Actividad",
-        col_excel_asig: "Programado",
-        col_excel_real: "Realizado",
-        col_excel_verif: "Verificacion"
-    })
-
-    # --- 5. LIMPIEZA ---
+    # Limpieza Numérica
     df["Programado"] = pd.to_numeric(df["Programado"], errors='coerce').fillna(0)
     df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
     
-    # Filtro: Solo actividades obligatorias (Meta > 0)
+    # Filtro: Solo actividades obligatorias
     df = df[df["Programado"] > 0]
+
+    # --- MAGIA: SUMAR LO QUE ACABAS DE SUBIR EN ESTA SESIÓN ---
+    # Si subiste algo ahora, se suma visualmente al Excel
+    def sumar_sesion(row):
+        act = row["Actividad"]
+        extra = st.session_state["avances_sesion"].get(act, 0)
+        return row["Realizado"] + extra
+
+    df["Realizado_Total"] = df.apply(sumar_sesion, axis=1)
 
 except Exception as e:
     st.error(f"Error procesando el archivo: {e}")
     st.stop()
 
-# --- 6. CÁLCULO DE KPIs ---
+# --- 5. CÁLCULO DE KPIs ---
 total_prog = df["Programado"].sum()
-total_real = df["Realizado"].sum()
+total_real = df["Realizado_Total"].sum() # Usamos el total actualizado
 porcentaje = (total_real / total_prog * 100) if total_prog > 0 else 0
 
-# --- 7. DASHBOARD VISUAL ---
+# --- 6. DASHBOARD VISUAL ---
 col1, col2 = st.columns([1, 2])
 
 with col1:
@@ -116,7 +122,7 @@ with col1:
         mode = "gauge+number",
         value = porcentaje,
         gauge = {
-            'axis': {'range': [None, 100]},
+            'axis': {'range': [None, 100]}, # Escala fija de 0 a 100
             'bar': {'color': "#004B8D"},
             'steps': [
                 {'range': [0, 80], 'color': "lightgray"},
@@ -131,28 +137,28 @@ with col1:
     st.metric("Meta Total", int(total_prog))
     st.metric("Realizadas", int(total_real), delta=f"Faltan {int(total_prog - total_real)}", delta_color="inverse")
 
-# --- 8. TABLA DE GESTIÓN (CORREGIDA PARA % Y BARRAS LLENAS) ---
+# --- 7. TABLA DE GESTIÓN (CORREGIDA 0-100) ---
 with col2:
-    st.subheader("📋 Plan de Trabajo (Asignado)")
+    st.subheader("📋 Plan de Trabajo")
     
-    # NUEVO: Calculamos el % exacto de cada fila para que la barra se pinte bien
-    # Si Realizado = Programado, el resultado es 1.0 (100%)
-    df["Avance_Pct"] = df["Realizado"] / df["Programado"]
-    
-    # Mostramos la tabla configurando la columna "Avance_Pct"
+    # Calculamos porcentaje en escala 0-100 para evitar decimales raros
+    # Si Realizado >= Programado, ponemos 100
+    df["Avance_Pct"] = (df["Realizado_Total"] / df["Programado"]) * 100
+    df["Avance_Pct"] = df["Avance_Pct"].clip(upper=100) # Que no pase de 100%
+
     st.dataframe(
-        df[["Actividad", "Programado", "Realizado", "Avance_Pct", "Verificacion"]],
+        df[["Actividad", "Programado", "Realizado_Total", "Avance_Pct", "Verificacion"]],
         column_config={
             "Actividad": st.column_config.TextColumn("Actividad", width="medium"),
             "Programado": st.column_config.NumberColumn("Meta"),
-            "Realizado": st.column_config.NumberColumn("Real"),
+            "Realizado_Total": st.column_config.NumberColumn("Real"),
             
-            # CONFIGURACIÓN CLAVE PARA EL PORCENTAJE
+            # CONFIGURACIÓN PARA QUE DIGA "100%"
             "Avance_Pct": st.column_config.ProgressColumn(
                 "Cumplimiento",
-                format="%.0f%%", # Muestra el símbolo % sin decimales
+                format="%d%%",   # %d significa entero (100) y %% pone el símbolo %
                 min_value=0,
-                max_value=1,     # 1 significa 100% de la barra
+                max_value=100,   # Escala 0 a 100
             ),
             
             "Verificacion": st.column_config.TextColumn("Requisito")
@@ -163,12 +169,21 @@ with col2:
 
 st.divider()
 
-# --- 9. CARGA DE EVIDENCIA ---
+# --- 8. CARGA DE EVIDENCIA ---
 st.markdown("### 📷 Cargar Evidencia")
 c_up1, c_up2 = st.columns(2)
 
 with c_up1:
-    actividades_lista = df["Actividad"].unique()
+    # Solo mostramos actividades que no estén completas al 100% (Opcional, o mostrar todas)
+    df_pendientes = df[df["Realizado_Total"] < df["Programado"]]
+    
+    # Si todo está listo, mostramos mensaje de éxito
+    if df_pendientes.empty:
+        st.success("¡Felicidades! Has completado todas las actividades asignadas.")
+        actividades_lista = df["Actividad"].unique() # Dejamos elegir igual por si quiere repetir
+    else:
+        actividades_lista = df_pendientes["Actividad"].unique()
+
     act_seleccionada = st.selectbox("Selecciona actividad:", actividades_lista)
     
     if not df.empty:
@@ -181,8 +196,14 @@ with c_up2:
     foto = st.camera_input("Foto del Documento")
     
     if foto:
-        if st.button("🚀 Enviar y Actualizar", type="primary", use_container_width=True):
-            with st.spinner("Enviando..."):
+        if st.button("🚀 Enviar y Registrar", type="primary", use_container_width=True):
+            with st.spinner("Procesando..."):
                 if enviar_evidencia(foto, act_seleccionada, PROYECTO_DEFAULT, USUARIO_ACTUAL):
-                    st.success("✅ ¡Evidencia enviada!")
-                    st.balloons()
+                    
+                    # --- ACTUALIZACIÓN DE MEMORIA TEMPORAL ---
+                    current_val = st.session_state["avances_sesion"].get(act_seleccionada, 0)
+                    st.session_state["avances_sesion"][act_seleccionada] = current_val + 1
+                    
+                    st.success("✅ ¡Registrado! El gráfico se ha actualizado.")
+                    time.sleep(2) # Espera un poco para que veas el mensaje
+                    st.rerun() # Recarga la página para mostrar la barra nueva
