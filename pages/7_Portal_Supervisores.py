@@ -15,7 +15,6 @@ st.set_page_config(page_title="Portal Supervisores", page_icon="📈", layout="w
 # --- 1. CONFIGURACIÓN ---
 USUARIO_ACTUAL = "Alioska Saavedra"
 PROYECTO_DEFAULT = "Minera Escondida"
-# Nombre exacto de tu archivo en la carpeta data
 FILE_PATH = "data/Plan Personalizado de actividades SSO 2026 - Alioska Saavedra.xlsx"
 
 # --- 2. FUNCIONES DE ENVÍO ---
@@ -57,10 +56,10 @@ st.title(f"📊 Portal de Cumplimiento: {USUARIO_ACTUAL}")
 
 try:
     if os.path.exists(FILE_PATH):
-        # Leemos sin cabecera para encontrar dónde empieza la tabla real
+        # 1. Leemos el Excel bruto
         df_raw = pd.read_excel(FILE_PATH, header=None)
         
-        # Buscamos la fila que tiene los títulos
+        # 2. Buscamos dónde empieza la tabla real
         header_row_idx = None
         for i, row in df_raw.iterrows():
             row_str = row.astype(str).str.cat(sep=' ')
@@ -69,7 +68,6 @@ try:
                 break
         
         if header_row_idx is not None:
-            # Cargamos de nuevo usando la fila correcta como cabecera
             df = pd.read_excel(FILE_PATH, header=header_row_idx)
         else:
             st.error("❌ No encontré 'NOMBRE DE LA ACTIVIDAD' en el Excel.")
@@ -78,8 +76,7 @@ try:
         st.error(f"⚠️ Archivo no encontrado: {FILE_PATH}")
         st.stop()
 
-    # --- MAPEO Y RENOMBRAMIENTO (LA SOLUCIÓN AL ERROR) ---
-    # Nombres exactos de tu Excel
+    # --- 4. RENOMBRAMIENTO DE COLUMNAS ---
     col_excel_actividad = "NOMBRE DE LA ACTIVIDAD"
     col_excel_asig = "CANTIDAD ASIGNADA"
     col_excel_real = "CANTIDAD REALIZADA"
@@ -87,10 +84,9 @@ try:
 
     # Verificamos que existan
     if col_excel_asig not in df.columns:
-        st.error(f"No encuentro la columna '{col_excel_asig}'. Revisa el Excel.")
+        st.error(f"No encuentro la columna '{col_excel_asig}'.")
         st.stop()
 
-    # TRUCO: Renombramos las columnas a nombres estándar para que el resto del código funcione
     df = df.rename(columns={
         col_excel_actividad: "Actividad",
         col_excel_asig: "Programado",
@@ -98,22 +94,31 @@ try:
         col_excel_verif: "Verificacion"
     })
 
-    # Limpieza de datos
-    df = df.dropna(subset=["Actividad"]) # Borrar filas vacías
+    # --- 5. LIMPIEZA AGRESIVA (AQUÍ ESTÁ LA SOLUCIÓN) ---
+    
+    # A) Convertimos las columnas numéricas a números reales. 
+    # Todo lo que sea texto (títulos repetidos, espacios) se convierte en NaN (vacío) y luego en 0.
     df["Programado"] = pd.to_numeric(df["Programado"], errors='coerce').fillna(0)
     df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
+
+    # B) FILTRO MAESTRO:
+    # "Solo quiero filas donde la Meta (Programado) sea mayor a 0"
+    # Esto elimina automáticamente:
+    #  - Las "ACTIVIDADES OCASIONALES" (porque no tienen meta obligatoria)
+    #  - Los títulos repetidos como "NOMBRE DE LA ACTIVIDAD"
+    #  - Filas vacías o basura
+    df = df[df["Programado"] > 0]
 
 except Exception as e:
     st.error(f"Error procesando el archivo: {e}")
     st.stop()
 
-# --- 4. CÁLCULO DE KPIs ---
-# Ahora sí existen las columnas "Programado" y "Realizado" porque las renombramos arriba
+# --- 6. CÁLCULO DE KPIs ---
 total_prog = df["Programado"].sum()
 total_real = df["Realizado"].sum()
 porcentaje = (total_real / total_prog * 100) if total_prog > 0 else 0
 
-# --- 5. DASHBOARD VISUAL ---
+# --- 7. DASHBOARD VISUAL ---
 col1, col2 = st.columns([1, 2])
 
 with col1:
@@ -137,9 +142,9 @@ with col1:
     st.metric("Meta Total", int(total_prog))
     st.metric("Realizadas", int(total_real), delta=f"Faltan {int(total_prog - total_real)}", delta_color="inverse")
 
-# --- 6. TABLA DE GESTIÓN ---
+# --- 8. TABLA DE GESTIÓN ---
 with col2:
-    st.subheader("📋 Plan de Trabajo")
+    st.subheader("📋 Plan de Trabajo (Asignado)")
     
     val_max = int(df["Programado"].max()) if not df.empty else 1
     if val_max == 0: val_max = 1
@@ -163,26 +168,27 @@ with col2:
 
 st.divider()
 
-# --- 7. CARGA DE EVIDENCIA ---
+# --- 9. CARGA DE EVIDENCIA ---
 st.markdown("### 📷 Cargar Evidencia")
 c_up1, c_up2 = st.columns(2)
 
 with c_up1:
-    # Filtramos solo actividades con meta > 0
-    df_activas = df[df["Programado"] > 0]
-    act_seleccionada = st.selectbox("Selecciona actividad:", df_activas["Actividad"].unique())
+    actividades_lista = df["Actividad"].unique()
+    act_seleccionada = st.selectbox("Selecciona actividad:", actividades_lista)
     
-    # Mostramos el requisito
-    if not df_activas.empty:
-        req = df_activas[df_activas["Actividad"] == act_seleccionada]["Verificacion"].values[0]
-        st.info(f"Debes subir: **{req}**")
+    if not df.empty:
+        # Obtenemos el requisito de forma segura
+        req_series = df[df["Actividad"] == act_seleccionada]["Verificacion"]
+        if not req_series.empty:
+            req = req_series.values[0]
+            st.info(f"Requisito: **{req}**")
 
 with c_up2:
     foto = st.camera_input("Foto del Documento")
     
     if foto:
-        if st.button("🚀 Enviar", type="primary", use_container_width=True):
+        if st.button("🚀 Enviar y Actualizar", type="primary", use_container_width=True):
             with st.spinner("Enviando..."):
                 if enviar_evidencia(foto, act_seleccionada, PROYECTO_DEFAULT, USUARIO_ACTUAL):
-                    st.success("✅ ¡Enviado! (Actualiza el Excel maestro para ver cambios)")
+                    st.success("✅ ¡Evidencia enviada!")
                     st.balloons()
