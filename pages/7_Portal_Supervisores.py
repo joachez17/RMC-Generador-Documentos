@@ -56,10 +56,8 @@ st.title(f"📊 Portal de Cumplimiento: {USUARIO_ACTUAL}")
 
 try:
     if os.path.exists(FILE_PATH):
-        # 1. Leemos el Excel bruto
         df_raw = pd.read_excel(FILE_PATH, header=None)
         
-        # 2. Buscamos dónde empieza la tabla real
         header_row_idx = None
         for i, row in df_raw.iterrows():
             row_str = row.astype(str).str.cat(sep=' ')
@@ -76,13 +74,12 @@ try:
         st.error(f"⚠️ Archivo no encontrado: {FILE_PATH}")
         st.stop()
 
-    # --- 4. RENOMBRAMIENTO DE COLUMNAS ---
+    # --- 4. RENOMBRAMIENTO ---
     col_excel_actividad = "NOMBRE DE LA ACTIVIDAD"
     col_excel_asig = "CANTIDAD ASIGNADA"
     col_excel_real = "CANTIDAD REALIZADA"
     col_excel_verif = "MEDIO DE VERIFICACIÓN"
 
-    # Verificamos que existan
     if col_excel_asig not in df.columns:
         st.error(f"No encuentro la columna '{col_excel_asig}'.")
         st.stop()
@@ -94,19 +91,11 @@ try:
         col_excel_verif: "Verificacion"
     })
 
-    # --- 5. LIMPIEZA AGRESIVA (AQUÍ ESTÁ LA SOLUCIÓN) ---
-    
-    # A) Convertimos las columnas numéricas a números reales. 
-    # Todo lo que sea texto (títulos repetidos, espacios) se convierte en NaN (vacío) y luego en 0.
+    # --- 5. LIMPIEZA ---
     df["Programado"] = pd.to_numeric(df["Programado"], errors='coerce').fillna(0)
     df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
-
-    # B) FILTRO MAESTRO:
-    # "Solo quiero filas donde la Meta (Programado) sea mayor a 0"
-    # Esto elimina automáticamente:
-    #  - Las "ACTIVIDADES OCASIONALES" (porque no tienen meta obligatoria)
-    #  - Los títulos repetidos como "NOMBRE DE LA ACTIVIDAD"
-    #  - Filas vacías o basura
+    
+    # Filtro: Solo actividades obligatorias (Meta > 0)
     df = df[df["Programado"] > 0]
 
 except Exception as e:
@@ -142,24 +131,30 @@ with col1:
     st.metric("Meta Total", int(total_prog))
     st.metric("Realizadas", int(total_real), delta=f"Faltan {int(total_prog - total_real)}", delta_color="inverse")
 
-# --- 8. TABLA DE GESTIÓN ---
+# --- 8. TABLA DE GESTIÓN (CORREGIDA PARA % Y BARRAS LLENAS) ---
 with col2:
     st.subheader("📋 Plan de Trabajo (Asignado)")
     
-    val_max = int(df["Programado"].max()) if not df.empty else 1
-    if val_max == 0: val_max = 1
-
+    # NUEVO: Calculamos el % exacto de cada fila para que la barra se pinte bien
+    # Si Realizado = Programado, el resultado es 1.0 (100%)
+    df["Avance_Pct"] = df["Realizado"] / df["Programado"]
+    
+    # Mostramos la tabla configurando la columna "Avance_Pct"
     st.dataframe(
-        df[["Actividad", "Programado", "Realizado", "Verificacion"]],
+        df[["Actividad", "Programado", "Realizado", "Avance_Pct", "Verificacion"]],
         column_config={
-            "Actividad": st.column_config.TextColumn("Actividad"),
+            "Actividad": st.column_config.TextColumn("Actividad", width="medium"),
             "Programado": st.column_config.NumberColumn("Meta"),
-            "Realizado": st.column_config.ProgressColumn(
-                "Avance",
-                format="%d",
+            "Realizado": st.column_config.NumberColumn("Real"),
+            
+            # CONFIGURACIÓN CLAVE PARA EL PORCENTAJE
+            "Avance_Pct": st.column_config.ProgressColumn(
+                "Cumplimiento",
+                format="%.0f%%", # Muestra el símbolo % sin decimales
                 min_value=0,
-                max_value=val_max
+                max_value=1,     # 1 significa 100% de la barra
             ),
+            
             "Verificacion": st.column_config.TextColumn("Requisito")
         },
         use_container_width=True,
@@ -177,7 +172,6 @@ with c_up1:
     act_seleccionada = st.selectbox("Selecciona actividad:", actividades_lista)
     
     if not df.empty:
-        # Obtenemos el requisito de forma segura
         req_series = df[df["Actividad"] == act_seleccionada]["Verificacion"]
         if not req_series.empty:
             req = req_series.values[0]
