@@ -126,6 +126,10 @@ with col1:
 with col2:
     st.subheader("📋 Tu Plan de Trabajo")
     
+    # Obtenemos el valor máximo como un número entero puro de Python
+    # Esto evita el error de JSON serializable
+    valor_maximo = int(max(df["Programado"].max(), 1))
+
     # Tabla con barras de progreso visuales
     st.dataframe(
         df[["Actividad", "Programado", "Realizado"]],
@@ -135,7 +139,7 @@ with col2:
                 "Avance",
                 format="%d",
                 min_value=0,
-                max_value=max(df["Programado"].max(), 1)
+                max_value=valor_maximo, # Usamos la variable corregida
             )
         },
         use_container_width=True,
