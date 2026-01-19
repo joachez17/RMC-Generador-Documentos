@@ -54,42 +54,59 @@ def enviar_evidencia(foto, actividad, proyecto, usuario):
         st.error(f"Error enviando correo: {e}")
         return False
 
-# --- 3. CARGA DE DATOS ---
+# --- 3. CARGA DE DATOS INTELIGENTE ---
 st.title(f"📊 Portal de Cumplimiento: {USUARIO_ACTUAL}")
 
+# CAMBIO 1: Apuntar al archivo XLSX original (Pon el nombre exacto de tu archivo)
+FILE_PATH = "data/Plan Personalizado de actividades SSO 2026 - Alioska Saavedra.xlsx"
+
 try:
-    # Intentamos leer el archivo. Si no existe, usamos datos de prueba.
-    if os.path.exists(CSV_FILE):
-        df = pd.read_csv(CSV_FILE)
+    if os.path.exists(FILE_PATH):
+        # Leemos el archivo sin cabecera primero para buscar dónde empieza
+        df_raw = pd.read_excel(FILE_PATH, header=None)
+        
+        # --- BUSCADOR DE CABECERA ---
+        header_row_idx = None
+        for i, row in df_raw.iterrows():
+            # Buscamos la fila que contenga "NOMBRE DE LA ACTIVIDAD" (o parte del texto)
+            row_str = row.astype(str).str.cat(sep=' ')
+            if "NOMBRE DE LA ACTIVIDAD" in row_str:
+                header_row_idx = i
+                break
+        
+        if header_row_idx is not None:
+            # Si la encontramos, recargamos el Excel usando esa fila como cabecera
+            df = pd.read_excel(FILE_PATH, header=header_row_idx)
+        else:
+            st.error("❌ No encontré la fila de encabezados que diga 'NOMBRE DE LA ACTIVIDAD'.")
+            st.stop()
+            
     else:
-        st.warning(f"⚠️ No se encontró el archivo '{CSV_FILE}'. Usando datos de ejemplo.")
-        data = {
-            "Actividad": ["Charla 5 Min", "Inspección EPP", "AST Diario", "Reunión Calidad", "Cierre NCR"],
-            "Programado": [20, 4, 20, 1, 2],
-            "Realizado": [12, 4, 10, 0, 1]
-        }
-        df = pd.DataFrame(data)
+        st.error(f"⚠️ No se encontró el archivo en: {FILE_PATH}")
+        st.stop()
 
-    # --- LIMPIEZA Y MAPEO DE COLUMNAS (INTELIGENCIA) ---
-    # Esto busca las columnas aunque tengan nombres ligeramente distintos en tu Excel
-    col_actividad = next((c for c in df.columns if "Actividad" in c or "Item" in c), None)
-    col_prog = next((c for c in df.columns if "Programado" in c or "Meta" in c or "Plan" in c), None)
-    col_real = next((c for c in df.columns if "Real" in c or "Ejecutado" in c), None)
-
-    if not col_actividad or not col_prog or not col_real:
-        st.error("❌ Error en las columnas del CSV. Asegúrate que tu Excel tenga columnas parecidas a: 'Actividad', 'Programado', 'Realizado'.")
+    # --- MAPEO DE COLUMNAS ---
+    # Ahora que tenemos la cabecera correcta, seleccionamos las columnas
+    col_actividad = "NOMBRE DE LA ACTIVIDAD"
+    col_prog = "CANTIDAD ASIGNADA"  # Verifica si en tu Excel dice "ASIGNADA" o "PROGRAMADA"
+    col_real = "CANTIDAD REALIZADA" # Verifica si dice "REALIZADA" o "EJECUTADA"
+    
+    # Validación extra por si acaso
+    missing_cols = [c for c in [col_actividad, col_prog, col_real] if c not in df.columns]
+    if missing_cols:
+        st.error(f"Faltan estas columnas en la tabla detectada: {missing_cols}")
         st.write("Columnas encontradas:", df.columns.tolist())
         st.stop()
+
+    # Limpieza de datos (Eliminar filas vacías o de totales que suelen estar al final)
+    df = df.dropna(subset=[col_actividad]) 
     
-    # Renombramos para trabajar fácil
-    df = df.rename(columns={col_actividad: "Actividad", col_prog: "Programado", col_real: "Realizado"})
-    
-    # Aseguramos que sean números (rellena vacíos con 0)
-    df["Programado"] = pd.to_numeric(df["Programado"], errors='coerce').fillna(0)
-    df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
+    # Normalizamos números
+    df[col_prog] = pd.to_numeric(df[col_prog], errors='coerce').fillna(0)
+    df[col_real] = pd.to_numeric(df[col_real], errors='coerce').fillna(0)
 
 except Exception as e:
-    st.error(f"Error al procesar el archivo: {e}")
+    st.error(f"Error al procesar el Excel: {e}")
     st.stop()
 
 # --- 4. CÁLCULO DE KPIs ---
