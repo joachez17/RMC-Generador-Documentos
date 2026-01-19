@@ -5,3 +5,5 @@ weasyprint
 streamlit-drawable-canvas
 Pillow
 numpy
+pandas
+plotly
