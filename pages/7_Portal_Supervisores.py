@@ -84,8 +84,7 @@ BASE_DATA_FOLDER = "data"
 MAPA_SUPERVISORES = {
     "Alioska Saavedra": "Plan Personalizado de actividades SSO 2026 - Alioska Saavedra.xlsx",
     "Froilán Vargas": "Plan_Froilan.xlsx",      # Ejemplo: Sube el archivo real a 'data'
-    "Juan de los Rios": "Plan_Juan.xlsx",       # Ejemplo
-    "Michel Nicolau": "Plan_Michel.xlsx"        # Ejemplo
+    "Juan de los Rios": "Plan_Juan.xlsx"       # Ejemplo
 }
 
 # Proyecto por defecto (o podrías hacerlo seleccionable también)
