@@ -76,11 +76,11 @@ BASE_DATA_FOLDER = "data"
 
 # Diccionario con los nombres EXACTOS de los archivos que subiste
 MAPA_SUPERVISORES = {
-    "Alioska Saavedra": "Plan Personalizado de actividades SSO 2026 - Alioska Saavedra.xlsx",
-    "Carlos Araya": "Plan Personalizado de actividades SSO 2026 - Carlos Araya.xlsx",
-    "Froilán Vargas": "Plan Personalizado de actividades SSO 2026 - Froilán Vargas.xlsx",
-    "Juan de los Rios": "Plan Personalizado de actividades SSO 2026 - Juan de los Rios.xlsx",
-    "Yorbin Valecillos": "Plan Personalizado de actividades SSO 2026 - Yorbin Valecillos.xlsx"
+    "Alioska Saavedra": "Plan_Alioska.xlsx",
+    "Carlos Araya": "Plan_Carlos.xlsx",
+    "Froilán Vargas": "Plan_Froilaan.xlsx",
+    "Juan de los Rios": "Plan_Juan.xlsx",
+    "Yorbin Valecillos": "Plan_Yorbin.xlsx"
 }
 
 PROYECTO_DEFAULT = "Minera Escondida"
