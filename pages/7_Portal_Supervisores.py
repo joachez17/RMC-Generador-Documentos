@@ -15,7 +15,6 @@ import time
 # ==========================================
 st.set_page_config(page_title="Portal Supervisores", page_icon="🛡️", layout="wide")
 
-# Inyección de CSS para diseño moderno (Tarjetas, Colores, Fuentes)
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
@@ -66,43 +65,37 @@ st.markdown("""
             color: white;
         }
         
-        /* Títulos */
-        h1, h2, h3, h4, h5 {
-            color: #004B8D;
-        }
+        h1, h2, h3, h4, h5 { color: #004B8D; }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
 # 2. CONFIGURACIÓN MAESTRA DE SUPERVISORES
 # ==========================================
-# Carpeta donde guardas los Excels
 BASE_DATA_FOLDER = "data"
 
-# DICCIONARIO: Nombre del Supervisor -> Nombre del Archivo Excel
-# ¡Edita esto cuando agregues nuevos supervisores!
+# Diccionario con los nombres EXACTOS de los archivos que subiste
 MAPA_SUPERVISORES = {
     "Alioska Saavedra": "Plan Personalizado de actividades SSO 2026 - Alioska Saavedra.xlsx",
-    "Froilán Vargas": "Plan_Froilan.xlsx",      # Ejemplo: Sube el archivo real a 'data'
-    "Juan de los Rios": "Plan_Juan.xlsx"       # Ejemplo
+    "Carlos Araya": "Plan Personalizado de actividades SSO 2026 - Carlos Araya.xlsx",
+    "Froilán Vargas": "Plan Personalizado de actividades SSO 2026 - Froilán Vargas.xlsx",
+    "Juan de los Rios": "Plan Personalizado de actividades SSO 2026 - Juan de los Rios.xlsx",
+    "Yorbin Valecillos": "Plan Personalizado de actividades SSO 2026 - Yorbin Valecillos.xlsx"
 }
 
-# Proyecto por defecto (o podrías hacerlo seleccionable también)
 PROYECTO_DEFAULT = "Minera Escondida"
 
 # ==========================================
 # 3. GESTIÓN DE MEMORIA (SESSION STATE)
 # ==========================================
-# Esto permite "recordar" las subidas de fotos mientras no recargues la página por completo
 if "avances_sesion" not in st.session_state:
     st.session_state["avances_sesion"] = {}
 
 # ==========================================
-# 4. FUNCIÓN DE ENVÍO DE CORREO (ROBOT)
+# 4. FUNCIÓN DE ENVÍO (ROBOT)
 # ==========================================
 def enviar_evidencia(foto, actividad, proyecto, usuario):
     try:
-        # Credenciales desde secrets.toml
         smtp_server = st.secrets["email"]["smtp_server"]
         smtp_port = st.secrets["email"]["smtp_port"]
         sender_email = st.secrets["email"]["sender_email"]
@@ -112,14 +105,11 @@ def enviar_evidencia(foto, actividad, proyecto, usuario):
         msg = MIMEMultipart()
         msg['From'] = sender_email
         msg['To'] = receiver_email
-        
-        # ASUNTO CLAVE para que el Robot de Google lo detecte
         msg['Subject'] = f"UPLOAD: |{proyecto}| - {actividad} de {usuario}"
 
-        body = f"Nueva evidencia cargada desde Portal Supervisores.\n\nActividad: {actividad}\nSupervisor: {usuario}\nFecha: {date.today()}"
+        body = f"Nueva evidencia cargada.\nActividad: {actividad}\nSupervisor: {usuario}\nFecha: {date.today()}"
         msg.attach(MIMEText(body, 'plain'))
 
-        # Adjuntar la foto
         if foto:
             part = MIMEBase('image', 'jpeg')
             part.set_payload(foto.getvalue())
@@ -127,7 +117,6 @@ def enviar_evidencia(foto, actividad, proyecto, usuario):
             part.add_header('Content-Disposition', f"attachment; filename=evidencia_{date.today()}.jpg")
             msg.attach(part)
 
-        # Enviar
         server = smtplib.SMTP(smtp_server, smtp_port)
         server.starttls()
         server.login(sender_email, sender_password)
@@ -135,7 +124,7 @@ def enviar_evidencia(foto, actividad, proyecto, usuario):
         server.quit()
         return True
     except Exception as e:
-        st.error(f"Error de conexión al enviar correo: {e}")
+        st.error(f"Error de conexión: {e}")
         return False
 
 # ==========================================
@@ -149,7 +138,7 @@ st.markdown('<div class="selector-box">', unsafe_allow_html=True)
 col_sel_1, col_sel_2 = st.columns([1, 3])
 with col_sel_1:
     st.markdown("### 👤 Identificación")
-    st.write("Seleccione su nombre para cargar su plan:")
+    st.write("Seleccione su nombre:")
 with col_sel_2:
     usuario_seleccionado = st.selectbox("Supervisor:", list(MAPA_SUPERVISORES.keys()), label_visibility="collapsed")
 st.markdown('</div>', unsafe_allow_html=True)
@@ -161,10 +150,9 @@ ruta_completa = os.path.join(BASE_DATA_FOLDER, nombre_archivo)
 datos_cargados = False
 df = pd.DataFrame()
 
-# Verificamos si existe el archivo
 if os.path.exists(ruta_completa):
     try:
-        # 1. Leer Excel sin cabecera para buscar la fila correcta
+        # 1. Búsqueda inteligente de la cabecera
         df_raw = pd.read_excel(ruta_completa, header=None)
         
         header_row_idx = None
@@ -175,11 +163,10 @@ if os.path.exists(ruta_completa):
                 break
         
         if header_row_idx is not None:
-            # 2. Cargar datos reales
+            # 2. Carga limpia
             df = pd.read_excel(ruta_completa, header=header_row_idx)
             
-            # 3. Renombrar columnas para estandarizar
-            # Ajusta estos nombres si tu Excel cambia
+            # 3. Renombrar columnas
             df = df.rename(columns={
                 "NOMBRE DE LA ACTIVIDAD": "Actividad",
                 "CANTIDAD ASIGNADA": "Programado",
@@ -187,17 +174,16 @@ if os.path.exists(ruta_completa):
                 "MEDIO DE VERIFICACIÓN": "Verificacion"
             })
             
-            # 4. Limpieza de datos numéricos
+            # 4. Limpieza numérica
             df["Programado"] = pd.to_numeric(df["Programado"], errors='coerce').fillna(0)
             df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
             
-            # 5. Filtro: Solo mostrar actividades obligatorias (> 0)
+            # 5. Filtro (Solo obligatorias)
             df = df[df["Programado"] > 0]
 
-            # 6. Sumar avances de la sesión actual (Memoria temporal)
+            # 6. Sumar avances de sesión
             def sumar_sesion(row):
                 act = row["Actividad"]
-                # Clave única: Usuario + Actividad
                 clave = f"{usuario_seleccionado}_{act}"
                 extra = st.session_state["avances_sesion"].get(clave, 0)
                 return row["Realizado"] + extra
@@ -206,61 +192,47 @@ if os.path.exists(ruta_completa):
             datos_cargados = True
             
         else:
-            st.error(f"❌ Error de Formato: No se encontró la columna 'NOMBRE DE LA ACTIVIDAD' en el archivo de {usuario_seleccionado}.")
+            st.error(f"❌ Formato incorrecto en archivo de {usuario_seleccionado} (Falta 'NOMBRE DE LA ACTIVIDAD').")
             
     except Exception as e:
-        st.error(f"❌ Ocurrió un error al leer el archivo Excel: {e}")
+        st.error(f"❌ Error leyendo archivo: {e}")
 else:
-    # Mensaje si no existe el archivo todavía
-    st.info(f"👋 Hola **{usuario_seleccionado}**. Estamos configurando tu perfil.")
-    st.warning(f"⚠️ No se encontró el archivo: `{nombre_archivo}` en la carpeta `data/`.")
+    st.info(f"👋 Hola **{usuario_seleccionado}**.")
+    st.warning(f"⚠️ No encuentro el archivo `{nombre_archivo}` en la carpeta `data`. Por favor cárgalo.")
 
 
-# --- C. MOSTRAR DASHBOARD (SOLO SI HAY DATOS) ---
+# --- C. DASHBOARD ---
 if datos_cargados and not df.empty:
     
-    # --- CÁLCULOS KPI ---
+    # KPI GLOBAL
     total_prog = int(df["Programado"].sum())
     total_real = int(df["Realizado_Total"].sum())
     
-    # Calcular porcentaje global (con tope de 100% visual)
-    if total_prog > 0:
-        pct_global = (total_real / total_prog) * 100
-    else:
-        pct_global = 0
-        
+    pct_global = (total_real / total_prog * 100) if total_prog > 0 else 0
     if pct_global > 100: pct_global = 100
 
-    # --- TARJETAS SUPERIORES ---
-    col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
-    with col_kpi1:
-        st.metric(label="📍 Meta Total Mes", value=f"{total_prog}")
-    with col_kpi2:
-        delta_val = total_real - total_prog
-        st.metric(label="✅ Actividades Realizadas", value=f"{total_real}", delta=f"{delta_val}" if delta_val < 0 else "¡Meta Cumplida!")
-    with col_kpi3:
-        st.metric(label="🚀 Porcentaje Global", value=f"{pct_global:.1f}%")
+    # TARJETAS SUPERIORES
+    c1, c2, c3 = st.columns(3)
+    with c1: st.metric("📍 Meta Mes", f"{total_prog}")
+    with c2: 
+        delta = total_real - total_prog
+        st.metric("✅ Realizadas", f"{total_real}", delta=f"{delta}" if delta < 0 else "¡Cumplido!")
+    with c3: st.metric("🚀 Cumplimiento", f"{pct_global:.1f}%")
 
-    st.markdown("<br>", unsafe_allow_html=True) # Espacio separador
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- GRÁFICO Y TABLA DETALLADA ---
+    # VISUALIZACIÓN
     c_viz, c_tabla = st.columns([1, 2], gap="medium")
     
     with c_viz:
         st.markdown('<div style="background-color: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
-        st.markdown(f"##### Avance: {usuario_seleccionado}")
-        
-        # Gráfico Velocímetro (Gauge)
+        st.markdown(f"##### Avance Global")
         fig = go.Figure(go.Indicator(
-            mode = "gauge+number",
-            value = pct_global,
+            mode = "gauge+number", value = pct_global,
             number = {'suffix': "%", 'font': {'size': 40, 'color': "#004B8D"}},
             gauge = {
-                'axis': {'range': [None, 100]},
-                'bar': {'color': "#004B8D"},
-                'steps': [
-                    {'range': [0, 100], 'color': "#f8f9fa"}
-                ],
+                'axis': {'range': [None, 100]}, 'bar': {'color': "#004B8D"},
+                'steps': [{'range': [0, 100], 'color': "#f8f9fa"}],
                 'threshold': {'line': {'color': "#28a745", 'width': 4}, 'thickness': 0.75, 'value': 100}
             }
         ))
@@ -272,9 +244,8 @@ if datos_cargados and not df.empty:
         st.markdown('<div style="background-color: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
         st.markdown("##### 📋 Detalle de Actividades")
         
-        # Calcular % Individual para la tabla (0-100)
         df["Avance_Pct"] = (df["Realizado_Total"] / df["Programado"]) * 100
-        df["Avance_Pct"] = df["Avance_Pct"].clip(upper=100) # Que no pase de 100 visualmente
+        df["Avance_Pct"] = df["Avance_Pct"].clip(upper=100)
 
         st.dataframe(
             df[["Actividad", "Programado", "Realizado_Total", "Avance_Pct"]],
@@ -282,55 +253,39 @@ if datos_cargados and not df.empty:
                 "Actividad": st.column_config.TextColumn("Actividad", width="medium"),
                 "Programado": st.column_config.NumberColumn("Meta", format="%d"),
                 "Realizado_Total": st.column_config.NumberColumn("Real", format="%d"),
-                "Avance_Pct": st.column_config.ProgressColumn(
-                    "Estado",
-                    format="%d%%",
-                    min_value=0,
-                    max_value=100,
-                ),
+                "Avance_Pct": st.column_config.ProgressColumn("Estado", format="%d%%", min_value=0, max_value=100),
             },
-            use_container_width=True,
-            hide_index=True,
-            height=300
+            use_container_width=True, hide_index=True, height=300
         )
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- ZONA DE CARGA DE EVIDENCIA ---
+    # ZONA DE CARGA
     st.markdown("---")
-    st.markdown("<h3 style='text-align:center; color:#004B8D;'>📸 Cargar Evidencia Fotográfica</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:center; color:#004B8D;'>📸 Cargar Evidencia</h3>", unsafe_allow_html=True)
     
-    col_input_1, col_input_2 = st.columns([1, 1], gap="large")
+    col_in1, col_in2 = st.columns([1, 1], gap="large")
     
-    with col_input_1:
-        st.info("Seleccione la actividad que acaba de realizar:")
-        
-        # Filtrar pendientes primero
+    with col_in1:
+        # Priorizar pendientes
         df_pendientes = df[df["Realizado_Total"] < df["Programado"]]
-        if not df_pendientes.empty:
-            lista_opciones = df_pendientes["Actividad"].unique()
-        else:
-            lista_opciones = df["Actividad"].unique()
-            st.success("🎉 ¡Todas las metas cumplidas! (Puede seguir subiendo registros si desea)")
+        lista_opciones = df_pendientes["Actividad"].unique() if not df_pendientes.empty else df["Actividad"].unique()
+        
+        if df_pendientes.empty:
+            st.success("🎉 ¡Todas las metas cumplidas!")
             
         act_seleccionada = st.selectbox("Actividad:", lista_opciones)
-        
-        # Mostrar requisito
         req = df[df["Actividad"] == act_seleccionada]["Verificacion"].iloc[0]
-        st.markdown(f"📄 **Documento requerido:** `{req}`")
+        st.info(f"Requisito: **{req}**")
 
-    with col_input_2:
-        st.write("Tome la foto del documento:")
-        foto = st.camera_input("Cámara", label_visibility="collapsed")
-        
+    with col_in2:
+        foto = st.camera_input("Foto", label_visibility="collapsed")
         if foto:
             if st.button("🚀 ENVIAR Y ACTUALIZAR", type="primary"):
-                with st.spinner("Enviando evidencia al sistema..."):
+                with st.spinner("Procesando..."):
                     if enviar_evidencia(foto, act_seleccionada, PROYECTO_DEFAULT, usuario_seleccionado):
-                        # Actualizar Memoria Temporal
-                        clave_unica = f"{usuario_seleccionado}_{act_seleccionada}"
-                        valor_actual = st.session_state["avances_sesion"].get(clave_unica, 0)
-                        st.session_state["avances_sesion"][clave_unica] = valor_actual + 1
-                        
-                        st.success("✅ ¡Registro Exitoso!")
-                        time.sleep(1.5)
-                        st.rerun() # Recargar página para ver cambios en gráfico
+                        k = f"{usuario_seleccionado}_{act_seleccionada}"
+                        curr = st.session_state["avances_sesion"].get(k, 0)
+                        st.session_state["avances_sesion"][k] = curr + 1
+                        st.success("✅ ¡Registrado!")
+                        time.sleep(1)
+                        st.rerun()
