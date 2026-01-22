@@ -78,7 +78,7 @@ BASE_DATA_FOLDER = "data"
 MAPA_SUPERVISORES = {
     "Alioska Saavedra": "Plan_Alioska.xlsx",
     "Carlos Araya": "Plan_Carlos.xlsx",
-    "Froilán Vargas": "Plan_Froilaan.xlsx",
+    "Froilán Vargas": "Plan_Froilan.xlsx",
     "Juan de los Rios": "Plan_Juan.xlsx",
     "Yorbin Valecillos": "Plan_Yorbin.xlsx"
 }
