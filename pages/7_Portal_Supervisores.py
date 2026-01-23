@@ -237,7 +237,7 @@ if df_raw is not None and not df_raw.empty:
                             envio_ok = enviar_correo_evidencia(foto, act_sel, PROYECTO_DEFAULT, usuario_seleccionado)
                             
                             # 2. Actualizar Google Sheet (Dato)
-                            update_ok = actualizar_google(usuario_seleccionado, act_sel)
+                            update_ok = actualizar_google(usuario_seleccionado, act_sel, foto)
                             
                             if update_ok:
                                 st.success("✅ ¡Éxito! Planilla actualizada en tiempo real.")
