@@ -7,216 +7,120 @@ import time
 import os
 from datetime import date
 
-# ==========================================
-# 1. CONFIGURACIÓN Y ESTILOS
-# ==========================================
 st.set_page_config(page_title="Portal SSO", page_icon="🛡️", layout="wide")
 
-# ⚠️ TU URL DE APPS SCRIPT
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNYKUeM1RsJYVWZOI0sH7S_KhA_hieFOnpzwnRHGGazyP7GOwCrnkGA3Sra4iHxEc/exec" 
+# ⚠️ TU NUEVA URL AQUÍ
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcKOlYS7ad95T3ssPOVxWosKbUW-8VFfbEo7PYfTJvz5iXLHQhNUrKghLZhX8dRaxC/exec"
 
 LISTA_SUPERVISORES = [
     "Alioska Saavedra", "Carlos Araya", "Froilán Vargas", 
     "Juan de los Rios", "Yorbin Valecillos"
 ]
 
-# ESTILOS FUTURISTAS Y LIMPIOS (RMC CORPORATE)
+# --- ESTILOS (Mantenemos tu diseño blanco y limpio) ---
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap');
+        .stApp { background: linear-gradient(135deg, #0b1c2c 0%, #112D4E 100%); font-family: 'Montserrat', sans-serif; }
         
-        /* Fondo general oscuro */
-        .stApp {
-            background: linear-gradient(135deg, #0b1c2c 0%, #112D4E 100%);
-            font-family: 'Montserrat', sans-serif;
-        }
-        
-        /* Tarjeta Login BLANCA */
         .login-card {
-            background-color: #ffffff; /* Fondo blanco sólido */
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra para resaltar */
-            text-align: center;
-            animation: fadeIn 1s ease-in;
+            background-color: #ffffff; border-radius: 20px; padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); text-align: center; animation: fadeIn 1s ease-in;
         }
-
-        /* Textos dentro de la tarjeta (ahora oscuros) */
-        .login-card h2, .login-card h3 { 
-            color: #0b1c2c !important; /* Azul oscuro corporativo */
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            font-weight: 700;
-        }
-        .login-card p { 
-            color: #00C9FF !important; /* Cian para el subtítulo */
-        }
-        /* Etiquetas del formulario */
-        .stMarkdown label p {
-            color: #4a5a6a !important; /* Gris oscuro */
-            font-weight: 500;
-        }
+        .login-card h2, .login-card h3 { color: #0b1c2c !important; text-transform: uppercase; font-weight: 700; }
+        .login-card p { color: #00C9FF !important; }
         
-        /* Inputs (diseño limpio para fondo blanco) */
         div[data-baseweb="select"] > div, .stTextInput > div > div > input {
-            background-color: #f0f2f5 !important; /* Fondo gris muy claro */
-            color: #333 !important; /* Texto oscuro */
-            border: 1px solid #dce0e4 !important; /* Borde sutil */
-            border-bottom: 2px solid #00C9FF !important; /* Acento cian abajo */
-            border-radius: 8px !important;
+            background-color: #f0f2f5 !important; color: #333 !important;
+            border: 1px solid #dce0e4 !important; border-bottom: 2px solid #00C9FF !important; border-radius: 8px !important;
         }
-
-        /* Botones */
         .stButton > button {
-            background: linear-gradient(90deg, #0b1c2c 0%, #004B8D 100%); /* Gradiente azul corporativo */
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 24px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(11, 28, 44, 0.3);
-            transition: all 0.3s ease;
-            width: 100%;
+            background: linear-gradient(90deg, #0b1c2c 0%, #004B8D 100%); color: white;
+            border: none; border-radius: 50px; padding: 12px 24px; font-weight: bold; width: 100%;
+            box-shadow: 0 4px 15px rgba(11, 28, 44, 0.3); transition: all 0.3s ease;
         }
-        .stButton > button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(11, 28, 44, 0.4);
-            background: linear-gradient(90deg, #004B8D 0%, #00C9FF 100%); /* Se ilumina al pasar el mouse */
-        }
+        .stButton > button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(11, 28, 44, 0.4); background: linear-gradient(90deg, #004B8D 0%, #00C9FF 100%); }
         
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+        /* Estilos Dashboard */
+        h1, h2, h3, .stMarkdown p { color: #FFFFFF !important; }
+        .stMetricLabel { color: #cfd8dc !important; }
+        
+        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
     </style>
 """, unsafe_allow_html=True)
 
-# --- GESTIÓN DE SESIÓN ---
-if 'usuario_actual' not in st.session_state:
-    st.session_state.usuario_actual = None
+if 'usuario_actual' not in st.session_state: st.session_state.usuario_actual = None
 
-# ==========================================
-# 2. FUNCIONES ROBUSTAS
-# ==========================================
-
-def get_base64_image(image_path):
-    """Convierte la imagen a código para mostrarla en HTML"""
+# --- FUNCIONES ---
+def get_base64_image(path):
     try:
-        with open(image_path, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode()
-    except:
-        return None
-
-def verificar_login(usuario, password):
-    try:
-        password_limpia = str(password).strip()
-        resp = requests.get(APPS_SCRIPT_URL, params={
-            'accion': 'login', 'usuario': usuario, 'password': password_limpia
-        }, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            if data.get("resultado") == "OK": return True
-        return False
-    except: return False
-
-def cargar_datos_google(supervisor):
-    try:
-        response = requests.get(APPS_SCRIPT_URL, params={'supervisor': supervisor}, timeout=15)
-        if response.status_code == 200: return pd.DataFrame(response.json())
-        return None
+        with open(path, "rb") as f: return base64.b64encode(f.read()).decode()
     except: return None
 
-def enviar_datos_y_foto(supervisor, actividad, foto_buffer):
+def verificar_login(usr, pwd):
     try:
-        foto_b64 = base64.b64encode(foto_buffer.getvalue()).decode('utf-8')
-        nombre_safe = actividad.replace("/", "-").replace("\\", "-")
+        resp = requests.get(APPS_SCRIPT_URL, params={'accion': 'login', 'usuario': usr, 'password': str(pwd).strip()}, timeout=10)
+        return resp.status_code == 200 and resp.json().get("resultado") == "OK"
+    except: return False
+
+def cargar_datos_google(sup):
+    try:
+        resp = requests.get(APPS_SCRIPT_URL, params={'supervisor': sup}, timeout=15)
+        return pd.DataFrame(resp.json()) if resp.status_code == 200 else None
+    except: return None
+
+# MODIFICADO: Ahora recibe una LISTA de archivos
+def enviar_datos_y_fotos(supervisor, actividad, lista_archivos):
+    try:
+        lista_b64 = []
+        # Convertir cada archivo a Base64
+        for archivo in lista_archivos:
+            b64_str = base64.b64encode(archivo.getvalue()).decode('utf-8')
+            lista_b64.append(b64_str)
+        
+        # Enviar lista de imagenes
         payload = {
-            "supervisor": supervisor, "actividad": actividad,
-            "imagen": foto_b64, "nombreArchivo": f"{nombre_safe}.jpg"
+            "supervisor": supervisor,
+            "actividad": actividad,
+            "imagenes": lista_b64 # <-- Array
         }
-        res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=30)
+        res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=60) # Timeout mayor por si son muchas fotos
         return res.status_code == 200
     except: return False
 
-# ==========================================
-# 3. INTERFAZ DE USUARIO
-# ==========================================
-
-# A. PANTALLA DE LOGIN
+# --- INTERFAZ ---
 if st.session_state.usuario_actual is None:
-    # Columnas para centrar y dar ancho a la tarjeta
     c1, c_centro, c2 = st.columns([1, 1.5, 1])
     with c_centro:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        
-        # --- CARGAR LOGO ---
-        ruta_logo = "assets/logo.png"
-        # Ajuste de ruta por si se ejecuta desde diferente nivel
-        if not os.path.exists(ruta_logo):
-            if os.path.exists("../assets/logo.png"):
-                ruta_logo = "../assets/logo.png"
-            
+        ruta_logo = "assets/logo.png" if os.path.exists("assets/logo.png") else "../assets/logo.png"
         img_b64 = get_base64_image(ruta_logo)
+        logo_html = f'<img src="data:image/png;base64,{img_b64}" width="220" style="margin: 0 auto 20px auto; display: block;">' if img_b64 else "<h1>🛡️</h1>"
         
-        if img_b64:
-            logo_html = f'<img src="data:image/png;base64,{img_b64}" width="220" style="margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">'
-        else:
-            logo_html = "<h1 style='font-size: 60px; text-align: center;'>🛡️</h1>"
-
-        # Tarjeta Visual BLANCA con Logo Real
-        st.markdown(f"""
-            <div class="login-card">
-                {logo_html}
-                <h2 style='margin-top: 0; margin-bottom: 5px;'>RMC CORPORATE</h2>
-                <p style='margin-top: 0px; font-size: 13px; letter-spacing: 2px; font-weight: 600;'>SECURE ACCESS V3.1</p>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div class="login-card">{logo_html}<h2 style='margin:0;'>RMC CORPORATE</h2><p style='margin:0; font-size:13px; font-weight:600;'>SECURE ACCESS V4.0</p></div>""", unsafe_allow_html=True)
         
-        # Formulario (fuera del div HTML para que Streamlit lo maneje)
-        # Usamos un container con el mismo estilo de fondo blanco para integrarlo
         with st.container():
-             st.markdown("""<style>div[data-testid="stForm"] {background-color: #ffffff; padding: 30px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); margin-top: -20px; position: relative; z-index: 1;}</style>""", unsafe_allow_html=True)
+             st.markdown("""<style>div[data-testid="stForm"] {background-color: #ffffff; padding: 30px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-top: -20px; position: relative; z-index: 1;}</style>""", unsafe_allow_html=True)
              with st.form("login_form"):
-                user_input = st.selectbox("OPERADOR:", LISTA_SUPERVISORES)
-                pass_input = st.text_input("CLAVE DE ACCESO:", type="password")
+                u = st.selectbox("OPERADOR:", LISTA_SUPERVISORES)
+                p = st.text_input("CLAVE DE ACCESO:", type="password")
                 st.markdown("<br>", unsafe_allow_html=True)
-                submitted = st.form_submit_button("INICIAR SESIÓN >")
-                
-                if submitted:
-                    if verificar_login(user_input, pass_input):
-                        st.success(f"✅ BIENVENIDO, {user_input.split()[0].upper()}.")
-                        st.session_state.usuario_actual = user_input
-                        time.sleep(1)
+                if st.form_submit_button("INICIAR SESIÓN >"):
+                    if verificar_login(u, p):
+                        st.session_state.usuario_actual = u
                         st.rerun()
-                    else:
-                        st.error("❌ ACCESO DENEGADO")
+                    else: st.error("❌ ACCESO DENEGADO")
 
-# B. PANTALLA DASHBOARD (Esta parte no cambia, usa estilos propios)
 else:
     usuario = st.session_state.usuario_actual
-    
-    # Estilos específicos para el Dashboard (para volver a textos claros sobre fondo oscuro)
-    st.markdown("""
-        <style>
-            h1, h2, h3, .stMarkdown p { color: #FFFFFF !important; }
-            .stMetricLabel { color: #cfd8dc !important; }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    # Header
     c_saludo, c_logout = st.columns([4, 1])
-    with c_saludo:
-        st.markdown(f"### 👋 OPERADOR: <span style='color:#00C9FF'>{usuario}</span>", unsafe_allow_html=True)
+    with c_saludo: st.markdown(f"### 👋 OPERADOR: <span style='color:#00C9FF'>{usuario}</span>", unsafe_allow_html=True)
     with c_logout:
         if st.button("CERRAR SESIÓN"):
             st.session_state.usuario_actual = None
             st.rerun()
-            
     st.markdown("---")
 
-    # (El resto del código del dashboard sigue exactamente igual...)
-    # ... (Carga de datos, KPIs, Gráficos, Formulario de subida)
     with st.spinner("Sincronizando satélite... 🛰️"):
         df_raw = cargar_datos_google(usuario)
 
@@ -224,15 +128,13 @@ else:
         header_idx = None
         for i, row in df_raw.iterrows():
             if "NOMBRE DE LA ACTIVIDAD" in str(row.values):
-                header_idx = i
-                break
+                header_idx = i; break
         
         if header_idx is not None:
             df = df_raw.iloc[header_idx + 1:].copy()
             df.columns = df_raw.iloc[header_idx]
             df.columns = df.columns.str.strip()
-            
-            col_map = {"NOMBRE DE LA ACTIVIDAD": "Actividad", "CANTIDAD ASIGNADA": "Programado", "CANTIDAD REALIZADA": "Realizado", "MEDIO DE VERIFICACIÓN": "Verificacion"}
+            col_map = {"NOMBRE DE LA ACTIVIDAD": "Actividad", "CANTIDAD ASIGNADA": "Programado", "CANTIDAD REALIZADA": "Realizado"}
             df = df.rename(columns={c: col_map[c] for c in df.columns if c in col_map})
             
             if "Programado" in df.columns:
@@ -240,46 +142,40 @@ else:
                 df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
                 df = df[df["Programado"] > 0]
                 
-                total_prog = int(df["Programado"].sum())
-                total_real = int(df["Realizado"].sum())
-                pct = (total_real / total_prog * 100) if total_prog > 0 else 0
-                
+                pct = (df["Realizado"].sum() / df["Programado"].sum() * 100) if df["Programado"].sum() > 0 else 0
                 k1, k2, k3 = st.columns(3)
-                k1.metric("META MENSUAL", total_prog)
-                k2.metric("REALIZADO", total_real)
+                k1.metric("META MENSUAL", int(df["Programado"].sum()))
+                k2.metric("REALIZADO", int(df["Realizado"].sum()))
                 k3.metric("AVANCE TOTAL", f"{pct:.1f}%")
-                
                 st.markdown("<br>", unsafe_allow_html=True)
-                
+
                 c_viz, c_tab = st.columns([1, 2])
                 with c_viz:
-                    fig = go.Figure(go.Indicator(mode="gauge+number", value=pct, 
-                                               gauge={'bar': {'color': "#00C9FF"}, 'axis': {'range': [None, 100]}, 'bgcolor': "rgba(255,255,255,0.1)"},
-                                               number={'font': {'color': "white"}}))
-                    fig.update_layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font={'color': "white"}, height=250, margin=dict(t=10, b=10, l=10, r=10))
+                    fig = go.Figure(go.Indicator(mode="gauge+number", value=pct, gauge={'bar': {'color': "#00C9FF"}, 'axis': {'range': [None, 100]}, 'bgcolor': "rgba(255,255,255,0.1)"}, number={'font': {'color': "white"}}))
+                    fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={'color': "white"}, height=250, margin=dict(t=10, b=10, l=10, r=10))
                     st.plotly_chart(fig, use_container_width=True)
                 with c_tab:
                     df["Estado"] = (df["Realizado"] / df["Programado"]) * 100
-                    st.dataframe(df[["Actividad", "Programado", "Realizado", "Estado"]], 
-                                 column_config={"Estado": st.column_config.ProgressColumn(format="%d%%", min_value=0, max_value=100)},
-                                 hide_index=True, height=250)
+                    st.dataframe(df[["Actividad", "Programado", "Realizado", "Estado"]], column_config={"Estado": st.column_config.ProgressColumn(format="%d%%", min_value=0, max_value=100)}, hide_index=True, height=250)
 
                 st.markdown("---")
-                st.markdown("### 📸 SUBIR EVIDENCIA")
+                st.markdown("### 📸 SUBIR EVIDENCIA (MULTIPAGE)")
+                st.info("💡 Puede seleccionar varias fotos a la vez (Ej: Las 4 hojas del AST).")
+
                 c1, c2 = st.columns(2)
                 with c1:
                     df_pend = df[df["Realizado"] < df["Programado"]]
                     ops = df_pend["Actividad"].unique() if not df_pend.empty else df["Actividad"].unique()
                     act_sel = st.selectbox("SELECCIONE ACTIVIDAD:", ops)
                 with c2:
-                    foto = st.camera_input("TOMAR FOTO")
-                    if foto and st.button("ENVIAR A BASE CENTRAL", type="primary"):
-                        with st.spinner("Transmitiendo datos..."):
-                            if enviar_datos_y_foto(usuario, act_sel, foto):
-                                st.success("✅ DATOS GUARDADOS EN DRIVE Y SHEET")
+                    # CAMBIO CLAVE: file_uploader en lugar de camera_input
+                    archivos = st.file_uploader("CARGAR DOCUMENTOS:", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
+                    
+                    if archivos and st.button("ENVIAR TODO A BASE CENTRAL", type="primary"):
+                        with st.spinner(f"Subiendo {len(archivos)} páginas..."):
+                            if enviar_datos_y_fotos(usuario, act_sel, archivos):
+                                st.success("✅ DOCUMENTO COMPLETO GUARDADO")
                                 time.sleep(2)
                                 st.rerun()
-                            else:
-                                st.error("❌ ERROR EN LA TRANSMISIÓN")
-        else:
-            st.warning("⚠️ No se encontraron datos.")
+                            else: st.error("❌ ERROR EN LA TRANSMISIÓN")
+        else: st.warning("⚠️ Sin datos.")
