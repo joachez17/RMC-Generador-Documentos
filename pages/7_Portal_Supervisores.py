@@ -63,15 +63,32 @@ def cargar_datos_google(supervisor):
         st.error(f"Error de conexión: {e}")
         return None
 
-def actualizar_google(supervisor, actividad):
-    """Manda la orden de sumar +1 en la hoja"""
+def actualizar_google(supervisor, actividad, foto_buffer):
+    """Manda la foto y el dato a Google Script para que organice todo"""
     try:
-        payload = {"supervisor": supervisor, "actividad": actividad}
-        # Petición POST para escribir
+        # 1. Convertir la foto a texto (Base64) para poder enviarla por internet
+        foto_bytes = foto_buffer.getvalue()
+        foto_b64 = base64.b64encode(foto_bytes).decode('utf-8')
+        
+        # 2. Empaquetar todo
+        payload = {
+            "supervisor": supervisor,
+            "actividad": actividad,
+            "imagen": foto_b64,
+            "nombreArchivo": f"{actividad}.jpg"
+        }
+        
+        # 3. Enviar al Script
         response = requests.post(APPS_SCRIPT_URL, json=payload)
-        return response.status_code == 200
+        
+        if response.status_code == 200:
+            return True
+        else:
+            st.error(f"Error Google: {response.text}")
+            return False
+            
     except Exception as e:
-        print(e)
+        st.error(f"Error enviando datos: {e}")
         return False
 
 def enviar_correo_evidencia(foto, actividad, proyecto, usuario):
