@@ -9,7 +9,7 @@ from datetime import date
 # ==========================================
 # 1. CONFIGURACIÓN Y ESTILOS
 # ==========================================
-st.set_page_config(page_title="Portal SSO", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="Portal SSO", page_icon="C:\JoacoScope\assets\logo.png", layout="wide")
 
 # ⚠️ TU URL DE APPS SCRIPT
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcKOlYS7ad95T3ssPOVxWosKbUW-8VFfbEo7PYfTJvz5iXLHQhNUrKghLZhX8dRaxC/exec" 
