@@ -21,106 +21,102 @@ LISTA_SUPERVISORES = [
 ]
 
 # ==========================================
-# 2. ESTILOS CSS AVANZADOS (NEÓN & CONTRASTE)
+# 2. ESTILOS CSS INTELIGENTES (DUAL THEME)
 # ==========================================
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap');
         
-        /* FONDO GENERAL */
+        /* --- A. TEMA GLOBAL (DASHBOARD OSCURO) --- */
         .stApp { 
             background: linear-gradient(135deg, #05101a 0%, #0b2545 100%); 
             font-family: 'Montserrat', sans-serif; 
         }
 
-        /* --- TEXTOS GENERALES (FUERZA BRUTA A BLANCO) --- */
-        h1, h2, h3, h4, p, span, div, label {
-            color: #FFFFFF !important;
-        }
-
-        /* --- TARJETAS DE MÉTRICAS (KPIs) --- */
-        div[data-testid="stMetric"] {
-            background-color: rgba(255, 255, 255, 0.05); /* Fondo cristal oscuro */
-            border: 1px solid rgba(0, 201, 255, 0.3);   /* Borde neón sutil */
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
+        /* Por defecto: TODO EL TEXTO ES BLANCO (Para el Dashboard) */
+        h1, h2, h3, h4, p, span, div, label { color: #FFFFFF; }
         
-        /* ETIQUETA DE LA MÉTRICA (Ej: Meta Mensual) */
-        div[data-testid="stMetricLabel"] > div > div > p {
-            color: #e0e0e0 !important; /* Blanco hueso para leer bien */
-            font-size: 16px !important;
-            font-weight: 500 !important;
-            text-transform: uppercase;
+        /* Inputs del Dashboard (Transparentes) */
+        .stTextInput > div > div > input, div[data-baseweb="select"] > div {
+            background-color: rgba(255, 255, 255, 0.1); 
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* VALOR DE LA MÉTRICA (El número grande) */
-        div[data-testid="stMetricValue"] > div {
-            color: #00C9FF !important; /* CIAN NEÓN */
-            font-size: 36px !important;
-            font-weight: 700 !important;
-            text-shadow: 0 0 10px rgba(0, 201, 255, 0.6); /* Resplandor */
-        }
-
-        /* --- INPUTS Y SELECTORES (DASHBOARD) --- */
-        /* Fondo de los inputs para que se lea el texto blanco */
-        div[data-baseweb="select"] > div, .stTextInput > div > div > input {
-            background-color: rgba(20, 30, 50, 0.8) !important; 
-            color: #ffffff !important;
-            border: 1px solid #405a75 !important;
-        }
-        /* Texto dentro del selector */
-        div[data-baseweb="select"] span {
-            color: #ffffff !important;
-        }
-
-        /* --- TARJETA DE LOGIN (BLANCA) - EXCEPCIONES --- */
-        .login-card {
-            background-color: #ffffff !important;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            text-align: center;
-            margin-bottom: -20px;
-        }
-        /* Revertir colores a negro SOLO dentro del login */
-        .login-card h2, .login-card h3, .login-card p { color: #0b1c2c !important; }
+        /* --- B. EXCEPCIÓN: LOGIN (TEMA CLARO) --- */
         
-        /* Contenedor del formulario Login */
+        /* 1. Contenedor Blanco del Formulario */
         div[data-testid="stForm"] {
             background-color: #ffffff !important;
-            padding: 30px;
+            padding: 40px;
             border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-        /* Inputs del Login (Fondo claro texto oscuro) */
-        div[data-testid="stForm"] input, div[data-testid="stForm"] div[data-baseweb="select"] > div {
-             background-color: #f0f2f5 !important;
-             color: #333 !important;
-             border: 1px solid #ccc !important;
-        }
-        div[data-testid="stForm"] label p { color: #333 !important; }
-        div[data-testid="stForm"] span { color: #333 !important; }
 
-        /* --- BOTONES --- */
+        /* 2. FORZAR TEXTO NEGRO DENTRO DEL FORMULARIO */
+        div[data-testid="stForm"] label p, 
+        div[data-testid="stForm"] h1, 
+        div[data-testid="stForm"] h2, 
+        div[data-testid="stForm"] p {
+            color: #333333 !important; /* Gris Oscuro */
+        }
+        
+        /* 3. INPUTS DENTRO DEL LOGIN (Gris Claro, Texto Negro) */
+        div[data-testid="stForm"] input {
+            background-color: #f0f2f5 !important;
+            color: #333333 !important;
+            border: 1px solid #ccc !important;
+        }
+        div[data-testid="stForm"] div[data-baseweb="select"] > div {
+            background-color: #f0f2f5 !important;
+            color: #333333 !important;
+            border: 1px solid #ccc !important;
+        }
+        /* Texto de la opción seleccionada en el login */
+        div[data-testid="stForm"] div[data-baseweb="select"] span {
+            color: #333333 !important;
+        }
+
+        /* 4. BOTÓN (Visible en ambos modos) */
         .stButton > button {
-            background: linear-gradient(90deg, #00C9FF 0%, #004B8D 100%); 
+            background: linear-gradient(90deg, #00C9FF 0%, #004B8D 100%) !important; 
             color: white !important;
-            border: none; border-radius: 50px; padding: 12px 24px; font-weight: bold;
-            box-shadow: 0 0 15px rgba(0, 201, 255, 0.4);
+            border: none; 
+            border-radius: 50px; 
+            padding: 12px 24px; 
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 75, 141, 0.3);
+            width: 100%;
         }
         .stButton > button:hover {
-            transform: scale(1.03);
-            box-shadow: 0 0 25px rgba(0, 201, 255, 0.7);
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 201, 255, 0.6);
         }
-
-        /* --- TABLA --- */
-        div[data-testid="stDataFrame"] {
-            background-color: rgba(255,255,255,0.05);
-            padding: 10px;
+        
+        /* --- C. MÉTRICAS NEÓN (DASHBOARD) --- */
+        div[data-testid="stMetric"] {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 201, 255, 0.3);
             border-radius: 10px;
+            padding: 15px;
+            text-align: center;
         }
+        div[data-testid="stMetricLabel"] p { color: #e0e0e0 !important; font-size: 14px; }
+        div[data-testid="stMetricValue"] div { color: #00C9FF !important; text-shadow: 0 0 10px rgba(0, 201, 255, 0.6); }
+
+        /* Estilo Tarjeta Título Login */
+        .login-header-card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: -30px; /* Pegado al formulario */
+            position: relative;
+            z-index: 1;
+        }
+        .login-header-card h2 { color: #0b1c2c !important; }
+        .login-header-card p { color: #00C9FF !important; }
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -155,27 +151,27 @@ def enviar_datos_y_fotos(supervisor, actividad, lista_archivos):
         return res.status_code == 200
     except: return False
 
-# --- LÓGICA DE PANTALLAS ---
+# --- INTERFAZ ---
 
-# 1. LOGIN
 if st.session_state.usuario_actual is None:
+    # LOGIN SCREEN
     c1, c_centro, c2 = st.columns([1, 1.5, 1])
     with c_centro:
         st.markdown("<br><br>", unsafe_allow_html=True)
         ruta_logo = "assets/logo.png" if os.path.exists("assets/logo.png") else "../assets/logo.png"
         img_b64 = get_base64_image(ruta_logo)
-        logo_html = f'<img src="data:image/png;base64,{img_b64}" width="220" style="margin: 0 auto 20px auto; display: block;">' if img_b64 else "<h1 style='color:#0b1c2c !important'>🛡️</h1>"
+        logo_html = f'<img src="data:image/png;base64,{img_b64}" width="200" style="display:block; margin:auto;">' if img_b64 else "<h1 style='color:#0b1c2c; text-align:center;'>🛡️</h1>"
         
-        # Tarjeta Visual (HTML)
+        # Tarjeta de Encabezado (Blanca)
         st.markdown(f"""
-            <div class="login-card">
+            <div class="login-header-card">
                 {logo_html}
-                <h2 style='margin:0; font-size: 24px;'>RMC CORPORATE</h2>
-                <p style='margin:0; font-size:13px; font-weight:600;'>SECURE ACCESS V4.2</p>
+                <h2 style='margin-top:10px; font-weight:700;'>RMC CORPORATE</h2>
+                <p style='font-weight:600; font-size:12px; letter-spacing:2px;'>SECURE ACCESS V4.3</p>
             </div>
         """, unsafe_allow_html=True)
         
-        # Formulario
+        # Formulario (Estilizado por CSS para ser blanco por dentro)
         with st.form("login_form"):
             u = st.selectbox("OPERADOR:", LISTA_SUPERVISORES)
             p = st.text_input("CLAVE DE ACCESO:", type="password")
@@ -186,11 +182,10 @@ if st.session_state.usuario_actual is None:
                     st.rerun()
                 else: st.error("❌ ACCESO DENEGADO")
 
-# 2. DASHBOARD
 else:
+    # DASHBOARD SCREEN
     usuario = st.session_state.usuario_actual
     
-    # Header
     c_saludo, c_logout = st.columns([4, 1])
     with c_saludo: 
         st.markdown(f"### 👋 BIENVENIDO: <span style='color:#00C9FF; text-shadow: 0 0 10px rgba(0,201,255,0.7);'>{usuario}</span>", unsafe_allow_html=True)
@@ -223,7 +218,7 @@ else:
                 
                 pct = (df["Realizado"].sum() / df["Programado"].sum() * 100) if df["Programado"].sum() > 0 else 0
                 
-                # --- MÉTRICAS (Ahora se verán en cajas de cristal con números neón) ---
+                # KPIs Neón
                 k1, k2, k3 = st.columns(3)
                 k1.metric("META MENSUAL", int(df["Programado"].sum()))
                 k2.metric("REALIZADO", int(df["Realizado"].sum()))
@@ -231,44 +226,27 @@ else:
                 
                 st.markdown("<br>", unsafe_allow_html=True)
 
-                # --- GRÁFICOS ---
+                # Gráficos (Texto Blanco)
                 c_viz, c_tab = st.columns([1, 2])
                 with c_viz:
-                    # Configuración del gráfico para que tenga texto BLANCO
                     fig = go.Figure(go.Indicator(
                         mode="gauge+number", value=pct, 
-                        gauge={
-                            'bar': {'color': "#00C9FF"}, 
-                            'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "white"},
-                            'bgcolor': "rgba(255,255,255,0.1)",
-                            'bordercolor': "white"
-                        }, 
+                        gauge={'bar': {'color': "#00C9FF"}, 'axis': {'range': [None, 100], 'tickcolor':"white"}, 'bgcolor': "rgba(255,255,255,0.1)", 'bordercolor': "white"}, 
                         number={'font': {'color': "white"}}
                     ))
-                    # Fondo transparente y fuente blanca global
-                    fig.update_layout(
-                        paper_bgcolor="rgba(0,0,0,0)", 
-                        plot_bgcolor="rgba(0,0,0,0)", 
-                        font={'color': "white"}, 
-                        height=280, 
-                        margin=dict(t=30, b=10, l=30, r=30)
-                    )
+                    fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={'color': "white"}, height=280, margin=dict(t=30, b=10, l=30, r=30))
                     st.plotly_chart(fig, use_container_width=True)
                 
                 with c_tab:
                     df["Estado"] = (df["Realizado"] / df["Programado"]) * 100
-                    st.dataframe(
-                        df[["Actividad", "Programado", "Realizado", "Estado"]], 
-                        column_config={"Estado": st.column_config.ProgressColumn(format="%d%%", min_value=0, max_value=100)}, 
-                        hide_index=True, 
-                        height=280
-                    )
+                    st.dataframe(df[["Actividad", "Programado", "Realizado", "Estado"]], 
+                                 column_config={"Estado": st.column_config.ProgressColumn(format="%d%%", min_value=0, max_value=100)}, 
+                                 hide_index=True, height=280)
 
                 st.markdown("---")
-                # Alerta con estilo visible
                 st.markdown("""
                     <div style="background-color: rgba(0, 201, 255, 0.1); padding: 10px; border-left: 5px solid #00C9FF; border-radius: 5px; margin-bottom: 20px;">
-                        <p style="margin: 0; color: white !important;">📸 <b>ZONA DE CARGA:</b> Puede seleccionar múltiples fotos para documentos de varias páginas.</p>
+                        <p style="margin: 0; color: white !important;">📸 <b>ZONA DE CARGA:</b> Puede seleccionar múltiples fotos.</p>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -279,13 +257,11 @@ else:
                     act_sel = st.selectbox("SELECCIONE ACTIVIDAD:", ops)
                 with c2:
                     archivos = st.file_uploader("CARGAR DOCUMENTOS (IMG):", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
-                    
-                    if archivos: 
-                        if st.button("ENVIAR TODO A BASE CENTRAL", type="primary"):
-                            with st.spinner(f"Subiendo {len(archivos)} páginas..."):
-                                if enviar_datos_y_fotos(usuario, act_sel, archivos):
-                                    st.success("✅ DOCUMENTO COMPLETO GUARDADO")
-                                    time.sleep(2)
-                                    st.rerun()
-                                else: st.error("❌ ERROR EN LA TRANSMISIÓN")
+                    if archivos and st.button("ENVIAR TODO A BASE CENTRAL", type="primary"):
+                        with st.spinner(f"Subiendo {len(archivos)} páginas..."):
+                            if enviar_datos_y_fotos(usuario, act_sel, archivos):
+                                st.success("✅ GUARDADO")
+                                time.sleep(2)
+                                st.rerun()
+                            else: st.error("❌ ERROR")
         else: st.warning("⚠️ Sin datos.")
