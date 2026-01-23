@@ -20,55 +20,69 @@ LISTA_SUPERVISORES = [
     "Juan de los Rios", "Yorbin Valecillos"
 ]
 
-# ESTILOS FUTURISTAS (RMC CORPORATE)
+# ESTILOS FUTURISTAS Y LIMPIOS (RMC CORPORATE)
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap');
         
+        /* Fondo general oscuro */
         .stApp {
             background: linear-gradient(135deg, #0b1c2c 0%, #112D4E 100%);
             font-family: 'Montserrat', sans-serif;
         }
         
-        /* Tarjeta Login Glassmorphism */
+        /* Tarjeta Login BLANCA */
         .login-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background-color: #ffffff; /* Fondo blanco sólido */
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 40px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra para resaltar */
             text-align: center;
             animation: fadeIn 1s ease-in;
         }
 
-        /* Textos */
-        h2, h3 { color: #FFFFFF !important; text-transform: uppercase; letter-spacing: 1px; }
-        p, label { color: #cfd8dc !important; }
+        /* Textos dentro de la tarjeta (ahora oscuros) */
+        .login-card h2, .login-card h3 { 
+            color: #0b1c2c !important; /* Azul oscuro corporativo */
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            font-weight: 700;
+        }
+        .login-card p { 
+            color: #00C9FF !important; /* Cian para el subtítulo */
+        }
+        /* Etiquetas del formulario */
+        .stMarkdown label p {
+            color: #4a5a6a !important; /* Gris oscuro */
+            font-weight: 500;
+        }
         
-        /* Inputs */
+        /* Inputs (diseño limpio para fondo blanco) */
         div[data-baseweb="select"] > div, .stTextInput > div > div > input {
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            color: white !important;
-            border: none !important;
-            border-bottom: 2px solid #00C9FF !important;
+            background-color: #f0f2f5 !important; /* Fondo gris muy claro */
+            color: #333 !important; /* Texto oscuro */
+            border: 1px solid #dce0e4 !important; /* Borde sutil */
+            border-bottom: 2px solid #00C9FF !important; /* Acento cian abajo */
+            border-radius: 8px !important;
         }
 
         /* Botones */
         .stButton > button {
-            background: linear-gradient(90deg, #004B8D 0%, #00C9FF 100%);
+            background: linear-gradient(90deg, #0b1c2c 0%, #004B8D 100%); /* Gradiente azul corporativo */
             color: white;
             border: none;
             border-radius: 50px;
             padding: 12px 24px;
             font-weight: bold;
-            box-shadow: 0 0 15px rgba(0, 201, 255, 0.3);
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(11, 28, 44, 0.3);
             transition: all 0.3s ease;
+            width: 100%;
         }
         .stButton > button:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 25px rgba(0, 201, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(11, 28, 44, 0.4);
+            background: linear-gradient(90deg, #004B8D 0%, #00C9FF 100%); /* Se ilumina al pasar el mouse */
         }
         
         @keyframes fadeIn {
@@ -131,59 +145,66 @@ def enviar_datos_y_foto(supervisor, actividad, foto_buffer):
 
 # A. PANTALLA DE LOGIN
 if st.session_state.usuario_actual is None:
-    c1, c_centro, c2 = st.columns([1, 2, 1])
+    # Columnas para centrar y dar ancho a la tarjeta
+    c1, c_centro, c2 = st.columns([1, 1.5, 1])
     with c_centro:
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<br><br>", unsafe_allow_html=True)
         
         # --- CARGAR LOGO ---
-        # Buscamos el logo en la carpeta 'assets'
         ruta_logo = "assets/logo.png"
-        logo_html = ""
-        
-        # Si estamos ejecutando desde 'pages', a veces hay que subir un nivel
+        # Ajuste de ruta por si se ejecuta desde diferente nivel
         if not os.path.exists(ruta_logo):
-            ruta_logo = "../assets/logo.png" 
+            if os.path.exists("../assets/logo.png"):
+                ruta_logo = "../assets/logo.png"
             
         img_b64 = get_base64_image(ruta_logo)
         
         if img_b64:
-            # Si encuentra el logo, lo usamos
-            logo_html = f'<img src="data:image/png;base64,{img_b64}" width="180" style="margin-bottom: 15px;">'
+            logo_html = f'<img src="data:image/png;base64,{img_b64}" width="220" style="margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">'
         else:
-            # Si no lo encuentra, usa el emoji por defecto
-            logo_html = "<h1 style='font-size: 50px;'>🛡️</h1>"
+            logo_html = "<h1 style='font-size: 60px; text-align: center;'>🛡️</h1>"
 
-        # Tarjeta Visual con Logo Real
+        # Tarjeta Visual BLANCA con Logo Real
         st.markdown(f"""
             <div class="login-card">
                 {logo_html}
-                <h2 style='margin-top: 0;'>RMC CORPORATE</h2>
-                <p style='color: #00C9FF !important; margin-top: -10px; font-size: 12px; letter-spacing: 2px;'>SECURE ACCESS V3.0</p>
+                <h2 style='margin-top: 0; margin-bottom: 5px;'>RMC CORPORATE</h2>
+                <p style='margin-top: 0px; font-size: 13px; letter-spacing: 2px; font-weight: 600;'>SECURE ACCESS V3.1</p>
             </div>
         """, unsafe_allow_html=True)
         
-        # Formulario
-        with st.form("login_form"):
-            st.markdown("<br>", unsafe_allow_html=True)
-            user_input = st.selectbox("OPERADOR:", LISTA_SUPERVISORES)
-            pass_input = st.text_input("CLAVE DE ACCESO:", type="password")
-            
-            submitted = st.form_submit_button("INICIAR SESIÓN >")
-            
-            if submitted:
-                if verificar_login(user_input, pass_input):
-                    st.success(f"✅ BIENVENIDO, {user_input.split()[0].upper()}.")
-                    st.session_state.usuario_actual = user_input
-                    time.sleep(1)
-                    st.rerun()
-                else:
-                    st.error("❌ ACCESO DENEGADO")
+        # Formulario (fuera del div HTML para que Streamlit lo maneje)
+        # Usamos un container con el mismo estilo de fondo blanco para integrarlo
+        with st.container():
+             st.markdown("""<style>div[data-testid="stForm"] {background-color: #ffffff; padding: 30px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); margin-top: -20px; position: relative; z-index: 1;}</style>""", unsafe_allow_html=True)
+             with st.form("login_form"):
+                user_input = st.selectbox("OPERADOR:", LISTA_SUPERVISORES)
+                pass_input = st.text_input("CLAVE DE ACCESO:", type="password")
+                st.markdown("<br>", unsafe_allow_html=True)
+                submitted = st.form_submit_button("INICIAR SESIÓN >")
+                
+                if submitted:
+                    if verificar_login(user_input, pass_input):
+                        st.success(f"✅ BIENVENIDO, {user_input.split()[0].upper()}.")
+                        st.session_state.usuario_actual = user_input
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("❌ ACCESO DENEGADO")
 
-# B. PANTALLA DASHBOARD (El resto del código sigue igual...)
+# B. PANTALLA DASHBOARD (Esta parte no cambia, usa estilos propios)
 else:
     usuario = st.session_state.usuario_actual
     
-    # Header con Logo Pequeño también
+    # Estilos específicos para el Dashboard (para volver a textos claros sobre fondo oscuro)
+    st.markdown("""
+        <style>
+            h1, h2, h3, .stMarkdown p { color: #FFFFFF !important; }
+            .stMetricLabel { color: #cfd8dc !important; }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Header
     c_saludo, c_logout = st.columns([4, 1])
     with c_saludo:
         st.markdown(f"### 👋 OPERADOR: <span style='color:#00C9FF'>{usuario}</span>", unsafe_allow_html=True)
@@ -194,8 +215,8 @@ else:
             
     st.markdown("---")
 
-    # (El resto del código de carga de datos y gráficos se mantiene idéntico al anterior)
-    # ...
+    # (El resto del código del dashboard sigue exactamente igual...)
+    # ... (Carga de datos, KPIs, Gráficos, Formulario de subida)
     with st.spinner("Sincronizando satélite... 🛰️"):
         df_raw = cargar_datos_google(usuario)
 
