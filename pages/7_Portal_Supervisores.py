@@ -13,7 +13,7 @@ from datetime import date
 st.set_page_config(page_title="Portal SSO", page_icon="🛡️", layout="wide")
 
 # ⚠️ TU URL DE APPS SCRIPT
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcKOlYS7ad95T3ssPOVxWosKbUW-8VFfbEo7PYfTJvz5iXLHQhNUrKghLZhX8dRaxC/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOPWOWEfYE2itRcwvn0QTfMQLLKCm8l8qahBcKyResMzTPyKV5OiB23ZnO9iTEtqaX/exec"
 
 LISTA_SUPERVISORES = [
     "Alioska Saavedra", "Carlos Araya", "Froilán Vargas", 
