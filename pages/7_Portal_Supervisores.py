@@ -21,7 +21,7 @@ LISTA_SUPERVISORES = [
 ]
 
 # ==========================================
-# 2. ESTILOS CSS INTELIGENTES (DUAL THEME)
+# 2. ESTILOS CSS INTELIGENTES (V4.4)
 # ==========================================
 st.markdown("""
     <style>
@@ -43,76 +43,86 @@ st.markdown("""
             border: 1px solid rgba(255,255,255,0.2);
         }
 
+        /* --- CORRECCIÓN 1: LISTA DESPLEGABLE (OPCIONES) --- */
+        /* Cuando haces clic y se abre la lista, forzamos texto NEGRO porque el fondo es blanco */
+        div[role="listbox"] ul {
+            background-color: #ffffff !important;
+        }
+        div[role="listbox"] li, div[role="listbox"] li span, div[role="listbox"] li div {
+            color: #000000 !important; /* Texto negro para las opciones */
+        }
+        /* Color al pasar el mouse por una opción */
+        div[role="listbox"] li:hover {
+            background-color: #f0f2f5 !important;
+        }
+
+        /* --- CORRECCIÓN 2: BOTÓN 'BROWSE FILES' (CARGAR DOCUMENTOS) --- */
+        /* Específicamente el botón pequeño dentro del uploader */
+        div[data-testid="stFileUploader"] button {
+            color: #333333 !important; /* Texto Oscuro */
+            background-color: #ffffff !important; /* Fondo Blanco */
+            border: 1px solid #ccc !important;
+            font-weight: 600 !important;
+        }
+        div[data-testid="stFileUploader"] button:hover {
+            border-color: #00C9FF !important;
+            color: #00C9FF !important;
+        }
+        /* El texto "Drag and drop files here" */
+        div[data-testid="stFileUploader"] span, div[data-testid="stFileUploader"] small {
+            color: #e0e0e0 !important;
+        }
+
         /* --- B. EXCEPCIÓN: LOGIN (TEMA CLARO) --- */
-        
-        /* 1. Contenedor Blanco del Formulario */
         div[data-testid="stForm"] {
             background-color: #ffffff !important;
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-
-        /* 2. FORZAR TEXTO NEGRO DENTRO DEL FORMULARIO */
-        div[data-testid="stForm"] label p, 
-        div[data-testid="stForm"] h1, 
-        div[data-testid="stForm"] h2, 
-        div[data-testid="stForm"] p {
-            color: #333333 !important; /* Gris Oscuro */
+        div[data-testid="stForm"] label p, div[data-testid="stForm"] h1, div[data-testid="stForm"] h2, div[data-testid="stForm"] p {
+            color: #333333 !important;
         }
-        
-        /* 3. INPUTS DENTRO DEL LOGIN (Gris Claro, Texto Negro) */
         div[data-testid="stForm"] input {
             background-color: #f0f2f5 !important;
             color: #333333 !important;
             border: 1px solid #ccc !important;
         }
+        /* Corrección select dentro del login */
         div[data-testid="stForm"] div[data-baseweb="select"] > div {
             background-color: #f0f2f5 !important;
             color: #333333 !important;
             border: 1px solid #ccc !important;
         }
-        /* Texto de la opción seleccionada en el login */
         div[data-testid="stForm"] div[data-baseweb="select"] span {
             color: #333333 !important;
         }
 
-        /* 4. BOTÓN (Visible en ambos modos) */
+        /* --- BOTÓN PRINCIPAL (ENVIAR/LOGIN) --- */
         .stButton > button {
             background: linear-gradient(90deg, #00C9FF 0%, #004B8D 100%) !important; 
             color: white !important;
-            border: none; 
-            border-radius: 50px; 
-            padding: 12px 24px; 
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0, 75, 141, 0.3);
-            width: 100%;
+            border: none; border-radius: 50px; padding: 12px 24px; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 75, 141, 0.3); width: 100%;
         }
         .stButton > button:hover {
             transform: scale(1.02);
             box-shadow: 0 6px 20px rgba(0, 201, 255, 0.6);
         }
         
-        /* --- C. MÉTRICAS NEÓN (DASHBOARD) --- */
+        /* --- MÉTRICAS NEÓN --- */
         div[data-testid="stMetric"] {
             background-color: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(0, 201, 255, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
+            border-radius: 10px; padding: 15px; text-align: center;
         }
         div[data-testid="stMetricLabel"] p { color: #e0e0e0 !important; font-size: 14px; }
         div[data-testid="stMetricValue"] div { color: #00C9FF !important; text-shadow: 0 0 10px rgba(0, 201, 255, 0.6); }
 
-        /* Estilo Tarjeta Título Login */
+        /* HEADER LOGIN */
         .login-header-card {
-            background-color: #ffffff;
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            margin-bottom: -30px; /* Pegado al formulario */
-            position: relative;
-            z-index: 1;
+            background-color: #ffffff; border-radius: 20px; padding: 30px;
+            text-align: center; margin-bottom: -30px; position: relative; z-index: 1;
         }
         .login-header-card h2 { color: #0b1c2c !important; }
         .login-header-card p { color: #00C9FF !important; }
@@ -152,9 +162,7 @@ def enviar_datos_y_fotos(supervisor, actividad, lista_archivos):
     except: return False
 
 # --- INTERFAZ ---
-
 if st.session_state.usuario_actual is None:
-    # LOGIN SCREEN
     c1, c_centro, c2 = st.columns([1, 1.5, 1])
     with c_centro:
         st.markdown("<br><br>", unsafe_allow_html=True)
@@ -162,16 +170,14 @@ if st.session_state.usuario_actual is None:
         img_b64 = get_base64_image(ruta_logo)
         logo_html = f'<img src="data:image/png;base64,{img_b64}" width="200" style="display:block; margin:auto;">' if img_b64 else "<h1 style='color:#0b1c2c; text-align:center;'>🛡️</h1>"
         
-        # Tarjeta de Encabezado (Blanca)
         st.markdown(f"""
             <div class="login-header-card">
                 {logo_html}
                 <h2 style='margin-top:10px; font-weight:700;'>RMC CORPORATE</h2>
-                <p style='font-weight:600; font-size:12px; letter-spacing:2px;'>SECURE ACCESS V4.3</p>
+                <p style='font-weight:600; font-size:12px; letter-spacing:2px;'>SECURE ACCESS V4.4</p>
             </div>
         """, unsafe_allow_html=True)
         
-        # Formulario (Estilizado por CSS para ser blanco por dentro)
         with st.form("login_form"):
             u = st.selectbox("OPERADOR:", LISTA_SUPERVISORES)
             p = st.text_input("CLAVE DE ACCESO:", type="password")
@@ -183,9 +189,7 @@ if st.session_state.usuario_actual is None:
                 else: st.error("❌ ACCESO DENEGADO")
 
 else:
-    # DASHBOARD SCREEN
     usuario = st.session_state.usuario_actual
-    
     c_saludo, c_logout = st.columns([4, 1])
     with c_saludo: 
         st.markdown(f"### 👋 BIENVENIDO: <span style='color:#00C9FF; text-shadow: 0 0 10px rgba(0,201,255,0.7);'>{usuario}</span>", unsafe_allow_html=True)
@@ -215,10 +219,8 @@ else:
                 df["Programado"] = pd.to_numeric(df["Programado"], errors='coerce').fillna(0)
                 df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
                 df = df[df["Programado"] > 0]
-                
                 pct = (df["Realizado"].sum() / df["Programado"].sum() * 100) if df["Programado"].sum() > 0 else 0
                 
-                # KPIs Neón
                 k1, k2, k3 = st.columns(3)
                 k1.metric("META MENSUAL", int(df["Programado"].sum()))
                 k2.metric("REALIZADO", int(df["Realizado"].sum()))
@@ -226,7 +228,6 @@ else:
                 
                 st.markdown("<br>", unsafe_allow_html=True)
 
-                # Gráficos (Texto Blanco)
                 c_viz, c_tab = st.columns([1, 2])
                 with c_viz:
                     fig = go.Figure(go.Indicator(
@@ -244,11 +245,7 @@ else:
                                  hide_index=True, height=280)
 
                 st.markdown("---")
-                st.markdown("""
-                    <div style="background-color: rgba(0, 201, 255, 0.1); padding: 10px; border-left: 5px solid #00C9FF; border-radius: 5px; margin-bottom: 20px;">
-                        <p style="margin: 0; color: white !important;">📸 <b>ZONA DE CARGA:</b> Puede seleccionar múltiples fotos.</p>
-                    </div>
-                """, unsafe_allow_html=True)
+                st.markdown("""<div style="background-color: rgba(0, 201, 255, 0.1); padding: 10px; border-left: 5px solid #00C9FF; border-radius: 5px; margin-bottom: 20px;"><p style="margin: 0; color: white !important;">📸 <b>ZONA DE CARGA:</b> Puede seleccionar múltiples fotos.</p></div>""", unsafe_allow_html=True)
 
                 c1, c2 = st.columns(2)
                 with c1:
