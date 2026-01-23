@@ -12,7 +12,7 @@ from datetime import date
 st.set_page_config(page_title="Portal Supervisores", page_icon="🛡️", layout="wide")
 
 # ⚠️ PEGA AQUÍ LA URL DE TU APPS SCRIPT (La que termina en /exec)
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw09rGApJoZoQmOTdpVbox5YZAGRloHY0gCqlSQDV1zmEzDLTIw6_mD0AfOLsTRVs7M/exec" 
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz04-2d3KPNiIhAPH-8_Dh-bT5TQADb7gk-qOYak9TzdBAKfBP8NfJuQoZEMQiffuIi/exec" 
 
 # Lista de supervisores (Deben coincidir EXACTO con las pestañas del Google Sheet)
 LISTA_SUPERVISORES = [
