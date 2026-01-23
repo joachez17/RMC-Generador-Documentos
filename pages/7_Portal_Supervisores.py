@@ -17,7 +17,7 @@ st.set_page_config(page_title="Portal Supervisores", page_icon="🛡️", layout
 
 # ⚠️ PEGA AQUÍ LA URL QUE TE DIO GOOGLE APPS SCRIPT
 # Debe verse algo como: "https://script.google.com/macros/s/AKfycbx.../exec"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhyb6jxAisIfzQg7dOv5hcx-WXvlJNTEkMlmZ8M6TZ0dAnJWKJcwhY9FDmeXTi3tSL/exec" 
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgNAYHuXEQVLtEd1ZEiYiNjpjogkbkvRH8iWBsrp581RNYDXggnIxqQcGd4Of8ZY-J/exec" 
 
 # Lista de supervisores (deben coincidir con las pestañas del Sheet)
 LISTA_SUPERVISORES = [
