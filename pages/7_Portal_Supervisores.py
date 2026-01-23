@@ -2,32 +2,31 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import requests
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email.mime.text import MIMEText
-from email import encoders
-from datetime import date
+import base64
 import time
+from datetime import date
 
 # ==========================================
 # 1. CONFIGURACIÓN Y CONEXIÓN
 # ==========================================
 st.set_page_config(page_title="Portal Supervisores", page_icon="🛡️", layout="wide")
 
-# ⚠️ PEGA AQUÍ LA URL QUE TE DIO GOOGLE APPS SCRIPT
-# Debe verse algo como: "https://script.google.com/macros/s/AKfycbx.../exec"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgNAYHuXEQVLtEd1ZEiYiNjpjogkbkvRH8iWBsrp581RNYDXggnIxqQcGd4Of8ZY-J/exec" 
+# ⚠️ PEGA AQUÍ LA URL DE TU APPS SCRIPT (La que termina en /exec)
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw09rGApJoZoQmOTdpVbox5YZAGRloHY0gCqlSQDV1zmEzDLTIw6_mD0AfOLsTRVs7M/exec" 
 
-# Lista de supervisores (deben coincidir con las pestañas del Sheet)
+# Lista de supervisores (Deben coincidir EXACTO con las pestañas del Google Sheet)
 LISTA_SUPERVISORES = [
-    "Alioska Saavedra", "Carlos Araya", "Froilán Vargas", 
-    "Juan de los Rios", "Yorbin Valecillos"
+    "Alioska Saavedra", 
+    "Carlos Araya", 
+    "Froilán Vargas", 
+    "Juan de los Rios", 
+    "Yorbin Valecillos",
+    "Joaquin Sánchez"
 ]
 
-PROYECTO_DEFAULT = "RMC PLAN ACTIVIDADES"
+PROYECTO_DEFAULT = "Minera Escondida"
 
-# Estilos CSS (Igual que antes)
+# Estilos CSS
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
@@ -46,31 +45,31 @@ st.markdown("""
 # ==========================================
 
 def cargar_datos_google(supervisor):
-    """Descarga los datos en tiempo real desde Google Sheet"""
+    """Descarga los datos del Sheet"""
     try:
-        # Hacemos la petición GET al script
         response = requests.get(APPS_SCRIPT_URL, params={'supervisor': supervisor})
-        
         if response.status_code == 200:
             data = response.json()
-            # Convertimos la lista de listas en DataFrame
-            df_raw = pd.DataFrame(data)
-            return df_raw
+            # Si el script devuelve un error controlado
+            if isinstance(data, dict) and "mensaje" in data:
+                st.error(f"⚠️ Error del Servidor: {data['mensaje']}")
+                return None
+            return pd.DataFrame(data)
         else:
-            st.error(f"Error conectando a Google: {response.status_code}")
+            st.error(f"❌ Error HTTP: {response.status_code}")
             return None
     except Exception as e:
         st.error(f"Error de conexión: {e}")
         return None
 
-def actualizar_google(supervisor, actividad, foto_buffer):
-    """Manda la foto y el dato a Google Script para que organice todo"""
+def enviar_datos_y_foto(supervisor, actividad, foto_buffer):
+    """Envía la foto y la orden de actualizar al Script"""
     try:
-        # 1. Convertir la foto a texto (Base64) para poder enviarla por internet
+        # 1. Convertir imagen a Base64
         foto_bytes = foto_buffer.getvalue()
         foto_b64 = base64.b64encode(foto_bytes).decode('utf-8')
         
-        # 2. Empaquetar todo
+        # 2. Preparar paquete
         payload = {
             "supervisor": supervisor,
             "actividad": actividad,
@@ -78,57 +77,27 @@ def actualizar_google(supervisor, actividad, foto_buffer):
             "nombreArchivo": f"{actividad}.jpg"
         }
         
-        # 3. Enviar al Script
+        # 3. Enviar (POST)
         response = requests.post(APPS_SCRIPT_URL, json=payload)
         
         if response.status_code == 200:
-            return True
+            # Verificar respuesta del script
+            res_json = response.json()
+            if "Exito" in res_json.get("mensaje", ""):
+                return True, res_json["mensaje"]
+            else:
+                return False, res_json.get("mensaje", "Error desconocido")
         else:
-            st.error(f"Error Google: {response.text}")
-            return False
+            return False, f"Error HTTP {response.status_code}"
             
     except Exception as e:
-        st.error(f"Error enviando datos: {e}")
-        return False
-
-def enviar_correo_evidencia(foto, actividad, proyecto, usuario):
-    # (Tu función de correo original se mantiene igual para enviar la foto)
-    try:
-        smtp_server = st.secrets["email"]["smtp_server"]
-        smtp_port = st.secrets["email"]["smtp_port"]
-        sender_email = st.secrets["email"]["sender_email"]
-        sender_password = st.secrets["email"]["sender_password"]
-        receiver_email = st.secrets["email"]["receiver_email"]
-
-        msg = MIMEMultipart()
-        msg['From'] = sender_email
-        msg['To'] = receiver_email
-        msg['Subject'] = f"UPLOAD: |{proyecto}| - {actividad} de {usuario}"
-        body = f"Evidencia cargada.\nActividad: {actividad}\nSupervisor: {usuario}\nFecha: {date.today()}"
-        msg.attach(MIMEText(body, 'plain'))
-
-        if foto:
-            part = MIMEBase('image', 'jpeg')
-            part.set_payload(foto.getvalue())
-            encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f"attachment; filename=evidencia_{date.today()}.jpg")
-            msg.attach(part)
-
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, receiver_email, msg.as_string())
-        server.quit()
-        return True
-    except Exception as e:
-        st.error(f"Error correo: {e}")
-        return False
+        return False, str(e)
 
 # ==========================================
 # 3. INTERFAZ DE USUARIO
 # ==========================================
 
-st.markdown("<h2 style='color: #004B8D;'>🛡️ Portal de Gestión SSO (Online)</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='color: #004B8D;'>🛡️ Portal de Gestión SSO (En Vivo)</h2>", unsafe_allow_html=True)
 
 # SELECCIÓN
 st.markdown('<div class="selector-box">', unsafe_allow_html=True)
@@ -138,13 +107,12 @@ with c2: usuario_seleccionado = st.selectbox("Nombre:", LISTA_SUPERVISORES, labe
 st.markdown('</div>', unsafe_allow_html=True)
 
 # CARGA DE DATOS
-with st.spinner(f"Conectando con Google Sheets de {usuario_seleccionado}..."):
+with st.spinner(f"Sincronizando con nube de {usuario_seleccionado}..."):
     df_raw = cargar_datos_google(usuario_seleccionado)
 
 if df_raw is not None and not df_raw.empty:
-    # PROCESAMIENTO INTELIGENTE (Igual que hacíamos con Excel, pero ahora con datos de la nube)
+    # --- PROCESAMIENTO DE DATOS ---
     header_row_idx = None
-    # Iteramos filas para encontrar "NOMBRE DE LA ACTIVIDAD"
     for i, row in df_raw.iterrows():
         row_str = row.astype(str).str.cat(sep=' ')
         if "NOMBRE DE LA ACTIVIDAD" in row_str:
@@ -152,30 +120,23 @@ if df_raw is not None and not df_raw.empty:
             break
             
     if header_row_idx is not None:
-        # Reconstruimos el DataFrame usando la fila detectada como header
         df = df_raw.iloc[header_row_idx + 1:].copy()
         df.columns = df_raw.iloc[header_row_idx]
+        df.columns = df.columns.str.strip() # Limpiar espacios
         
-        # Limpieza de nombres de columnas
-        df.columns = df.columns.str.strip() # Quitar espacios extra
-        
-        # Renombrar a nuestro estándar
+        # Mapeo de columnas
         col_map = {
             "NOMBRE DE LA ACTIVIDAD": "Actividad",
             "CANTIDAD ASIGNADA": "Programado",
             "CANTIDAD REALIZADA": "Realizado",
             "MEDIO DE VERIFICACIÓN": "Verificacion"
         }
-        # Solo renombramos si existen
         df = df.rename(columns={c: col_map[c] for c in df.columns if c in col_map})
         
-        # Validar que existan las clave
         if "Programado" in df.columns and "Realizado" in df.columns:
-            # Convertir a números
+            # Conversión numérica
             df["Programado"] = pd.to_numeric(df["Programado"], errors='coerce').fillna(0)
             df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
-            
-            # Filtro Obligatorias
             df = df[df["Programado"] > 0]
             
             # --- DASHBOARD ---
@@ -187,7 +148,7 @@ if df_raw is not None and not df_raw.empty:
             # Métricas
             c_kpi1, c_kpi2, c_kpi3 = st.columns(3)
             with c_kpi1: st.metric("📍 Meta Mes", total_prog)
-            with c_kpi2: st.metric("✅ Realizado (Nube)", total_real)
+            with c_kpi2: st.metric("✅ Realizado", total_real)
             with c_kpi3: st.metric("🚀 Avance", f"{pct:.1f}%")
             
             st.markdown("<br>", unsafe_allow_html=True)
@@ -213,41 +174,43 @@ if df_raw is not None and not df_raw.empty:
                     use_container_width=True, hide_index=True, height=300
                 )
             
-            # --- ZONA DE CARGA ---
+            # --- ZONA DE CARGA (INPUT) ---
             st.markdown("---")
-            st.markdown("### 📸 Subir Evidencia (Actualiza Google Sheet)")
+            st.markdown("### 📸 Subir Evidencia")
             
             c_input1, c_input2 = st.columns(2)
             with c_input1:
+                # Mostrar pendientes primero
                 df_pend = df[df["Realizado"] < df["Programado"]]
                 opciones = df_pend["Actividad"].unique() if not df_pend.empty else df["Actividad"].unique()
-                act_sel = st.selectbox("Actividad:", opciones)
                 
-                # Buscar requisito
+                act_sel = st.selectbox("Seleccione Actividad:", opciones)
+                
                 if "Verificacion" in df.columns:
                     req = df[df["Actividad"] == act_sel]["Verificacion"].iloc[0]
                     st.info(f"Requisito: {req}")
             
             with c_input2:
-                foto = st.camera_input("Evidencia")
+                foto = st.camera_input("Tomar Foto")
+                
                 if foto:
-                    if st.button("🚀 ENVIAR Y GRABAR EN DRIVE", type="primary"):
-                        with st.spinner("Subiendo foto y actualizando planilla..."):
-                            # 1. Enviar Correo (Foto)
-                            envio_ok = enviar_correo_evidencia(foto, act_sel, PROYECTO_DEFAULT, usuario_seleccionado)
+                    if st.button("🚀 ENVIAR Y GRABAR", type="primary"):
+                        with st.spinner("Subiendo a Drive y Actualizando Planilla..."):
                             
-                            # 2. Actualizar Google Sheet Dato
-                            update_ok = actualizar_google(usuario_seleccionado, act_sel, foto)
+                            exito, mensaje = enviar_datos_y_foto(usuario_seleccionado, act_sel, foto)
                             
-                            if update_ok:
-                                st.success("✅ ¡Éxito! Planilla actualizada en tiempo real.")
-                                time.sleep(2)
-                                st.rerun() # Recargar para ver el cambio REAL
+                            if exito:
+                                st.success(f"✅ ¡LISTO! {mensaje}")
+                                st.balloons() # ¡Celebración!
+                                time.sleep(3)
+                                st.rerun() # Recarga la página para ver el cambio
                             else:
-                                st.warning("⚠️ La foto se envió, pero hubo un error actualizando la planilla.")
+                                st.error(f"❌ Error: {mensaje}")
+
         else:
-            st.error("No encontré las columnas 'Programado'/'Realizado'. Revisa los nombres en el Sheet.")
+            st.error("No se encontraron columnas numéricas (Programado/Realizado).")
     else:
-        st.error("No encontré la fila 'NOMBRE DE LA ACTIVIDAD' en el Sheet.")
+        st.error("No se encontró la fila 'NOMBRE DE LA ACTIVIDAD' en el Sheet.")
 else:
-    st.error("Error al cargar datos. Verifica la URL del Apps Script.")
+    # Mensaje si falla la carga inicial
+    pass
