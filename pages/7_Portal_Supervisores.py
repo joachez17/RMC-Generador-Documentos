@@ -4,23 +4,20 @@ import plotly.graph_objects as go
 import requests
 import base64
 import time
+import os
 from datetime import date
 
 # ==========================================
 # 1. CONFIGURACIÓN Y ESTILOS
 # ==========================================
-st.set_page_config(page_title="Portal SSO", page_icon="C:\JoacoScope\assets\logo.png", layout="wide")
+st.set_page_config(page_title="Portal SSO", page_icon="🛡️", layout="wide")
 
 # ⚠️ TU URL DE APPS SCRIPT
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcKOlYS7ad95T3ssPOVxWosKbUW-8VFfbEo7PYfTJvz5iXLHQhNUrKghLZhX8dRaxC/exec" 
 
-# Lista de supervisores
 LISTA_SUPERVISORES = [
-    "Alioska Saavedra", 
-    "Carlos Araya", 
-    "Froilán Vargas", 
-    "Juan de los Rios", 
-    "Yorbin Valecillos"
+    "Alioska Saavedra", "Carlos Araya", "Froilán Vargas", 
+    "Juan de los Rios", "Yorbin Valecillos"
 ]
 
 # ESTILOS FUTURISTAS (RMC CORPORATE)
@@ -43,10 +40,11 @@ st.markdown("""
             padding: 40px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             text-align: center;
+            animation: fadeIn 1s ease-in;
         }
 
         /* Textos */
-        h1, h2, h3 { color: #FFFFFF !important; text-transform: uppercase; letter-spacing: 1px; }
+        h2, h3 { color: #FFFFFF !important; text-transform: uppercase; letter-spacing: 1px; }
         p, label { color: #cfd8dc !important; }
         
         /* Inputs */
@@ -72,6 +70,11 @@ st.markdown("""
             transform: scale(1.02);
             box-shadow: 0 0 25px rgba(0, 201, 255, 0.6);
         }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -80,49 +83,43 @@ if 'usuario_actual' not in st.session_state:
     st.session_state.usuario_actual = None
 
 # ==========================================
-# 2. FUNCIONES ROBUSTAS (ANTI-ERRORES)
+# 2. FUNCIONES ROBUSTAS
 # ==========================================
 
-def verificar_login(usuario, password):
-    """Verifica credenciales limpiando espacios en blanco"""
+def get_base64_image(image_path):
+    """Convierte la imagen a código para mostrarla en HTML"""
     try:
-        # .strip() elimina espacios accidentales al inicio o final
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    except:
+        return None
+
+def verificar_login(usuario, password):
+    try:
         password_limpia = str(password).strip()
-        
         resp = requests.get(APPS_SCRIPT_URL, params={
-            'accion': 'login', 
-            'usuario': usuario, 
-            'password': password_limpia
-        }, timeout=10) # Timeout para evitar bloqueos
-        
+            'accion': 'login', 'usuario': usuario, 'password': password_limpia
+        }, timeout=10)
         if resp.status_code == 200:
             data = resp.json()
-            if data.get("resultado") == "OK":
-                return True
+            if data.get("resultado") == "OK": return True
         return False
-    except Exception as e:
-        print(f"Error login: {e}") # Solo para consola
-        return False
+    except: return False
 
 def cargar_datos_google(supervisor):
     try:
         response = requests.get(APPS_SCRIPT_URL, params={'supervisor': supervisor}, timeout=15)
-        if response.status_code == 200:
-            return pd.DataFrame(response.json())
+        if response.status_code == 200: return pd.DataFrame(response.json())
         return None
     except: return None
 
 def enviar_datos_y_foto(supervisor, actividad, foto_buffer):
     try:
         foto_b64 = base64.b64encode(foto_buffer.getvalue()).decode('utf-8')
-        # Sanitizar nombre de archivo por si la actividad tiene caracteres raros
         nombre_safe = actividad.replace("/", "-").replace("\\", "-")
-        
         payload = {
-            "supervisor": supervisor,
-            "actividad": actividad,
-            "imagen": foto_b64,
-            "nombreArchivo": f"{nombre_safe}.jpg"
+            "supervisor": supervisor, "actividad": actividad,
+            "imagen": foto_b64, "nombreArchivo": f"{nombre_safe}.jpg"
         }
         res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=30)
         return res.status_code == 200
@@ -137,12 +134,31 @@ if st.session_state.usuario_actual is None:
     c1, c_centro, c2 = st.columns([1, 2, 1])
     with c_centro:
         st.markdown("<br>", unsafe_allow_html=True)
-        # Tarjeta Visual HTML
-        st.markdown("""
+        
+        # --- CARGAR LOGO ---
+        # Buscamos el logo en la carpeta 'assets'
+        ruta_logo = "assets/logo.png"
+        logo_html = ""
+        
+        # Si estamos ejecutando desde 'pages', a veces hay que subir un nivel
+        if not os.path.exists(ruta_logo):
+            ruta_logo = "../assets/logo.png" 
+            
+        img_b64 = get_base64_image(ruta_logo)
+        
+        if img_b64:
+            # Si encuentra el logo, lo usamos
+            logo_html = f'<img src="data:image/png;base64,{img_b64}" width="180" style="margin-bottom: 15px;">'
+        else:
+            # Si no lo encuentra, usa el emoji por defecto
+            logo_html = "<h1 style='font-size: 50px;'>🛡️</h1>"
+
+        # Tarjeta Visual con Logo Real
+        st.markdown(f"""
             <div class="login-card">
-                <h1 style='font-size: 50px;'>🛡️</h1>
-                <h2>RMC CORPORATE</h2>
-                <p style='color: #00C9FF !important; margin-top: -10px;'>SECURE ACCESS V2.1</p>
+                {logo_html}
+                <h2 style='margin-top: 0;'>RMC CORPORATE</h2>
+                <p style='color: #00C9FF !important; margin-top: -10px; font-size: 12px; letter-spacing: 2px;'>SECURE ACCESS V3.0</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -155,20 +171,19 @@ if st.session_state.usuario_actual is None:
             submitted = st.form_submit_button("INICIAR SESIÓN >")
             
             if submitted:
-                # Aquí aplicamos la limpieza automática
                 if verificar_login(user_input, pass_input):
-                    st.success(f"✅ ACCESO AUTORIZADO. BIENVENIDO {user_input.split()[0].upper()}.")
+                    st.success(f"✅ BIENVENIDO, {user_input.split()[0].upper()}.")
                     st.session_state.usuario_actual = user_input
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("❌ ACCESO DENEGADO. Verifique su clave.")
+                    st.error("❌ ACCESO DENEGADO")
 
-# B. PANTALLA DASHBOARD (LOGUEADO)
+# B. PANTALLA DASHBOARD (El resto del código sigue igual...)
 else:
     usuario = st.session_state.usuario_actual
     
-    # Header
+    # Header con Logo Pequeño también
     c_saludo, c_logout = st.columns([4, 1])
     with c_saludo:
         st.markdown(f"### 👋 OPERADOR: <span style='color:#00C9FF'>{usuario}</span>", unsafe_allow_html=True)
@@ -179,12 +194,12 @@ else:
             
     st.markdown("---")
 
-    # Carga de datos
+    # (El resto del código de carga de datos y gráficos se mantiene idéntico al anterior)
+    # ...
     with st.spinner("Sincronizando satélite... 🛰️"):
         df_raw = cargar_datos_google(usuario)
 
     if df_raw is not None and not df_raw.empty:
-        # Lógica de procesamiento de datos (Mantenida intacta)
         header_idx = None
         for i, row in df_raw.iterrows():
             if "NOMBRE DE LA ACTIVIDAD" in str(row.values):
@@ -204,7 +219,6 @@ else:
                 df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
                 df = df[df["Programado"] > 0]
                 
-                # KPIs
                 total_prog = int(df["Programado"].sum())
                 total_real = int(df["Realizado"].sum())
                 pct = (total_real / total_prog * 100) if total_prog > 0 else 0
@@ -216,7 +230,6 @@ else:
                 
                 st.markdown("<br>", unsafe_allow_html=True)
                 
-                # Gráficos
                 c_viz, c_tab = st.columns([1, 2])
                 with c_viz:
                     fig = go.Figure(go.Indicator(mode="gauge+number", value=pct, 
@@ -230,7 +243,6 @@ else:
                                  column_config={"Estado": st.column_config.ProgressColumn(format="%d%%", min_value=0, max_value=100)},
                                  hide_index=True, height=250)
 
-                # Input Evidencia
                 st.markdown("---")
                 st.markdown("### 📸 SUBIR EVIDENCIA")
                 c1, c2 = st.columns(2)
@@ -249,4 +261,4 @@ else:
                             else:
                                 st.error("❌ ERROR EN LA TRANSMISIÓN")
         else:
-            st.warning("⚠️ No se encontraron datos. Verifique la Planilla Maestra.")
+            st.warning("⚠️ No se encontraron datos.")
