@@ -236,7 +236,7 @@ if df_raw is not None and not df_raw.empty:
                             # 1. Enviar Correo (Foto)
                             envio_ok = enviar_correo_evidencia(foto, act_sel, PROYECTO_DEFAULT, usuario_seleccionado)
                             
-                            # 2. Actualizar Google Sheet (Dato)
+                            # 2. Actualizar Google Sheet Dato
                             update_ok = actualizar_google(usuario_seleccionado, act_sel, foto)
                             
                             if update_ok:
