@@ -12,8 +12,8 @@ from datetime import date
 # ==========================================
 st.set_page_config(page_title="Portal SSO", page_icon="🛡️", layout="wide")
 
-# ⚠️ TU URL DE APPS SCRIPT
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOPWOWEfYE2itRcwvn0QTfMQLLKCm8l8qahBcKyResMzTPyKV5OiB23ZnO9iTEtqaX/exec"
+# ⚠️ TU URL DE APPS SCRIPT (Asegúrate que sea la V11 Multicarga)
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcKOlYS7ad95T3ssPOVxWosKbUW-8VFfbEo7PYfTJvz5iXLHQhNUrKghLZhX8dRaxC/exec"
 
 LISTA_SUPERVISORES = [
     "Alioska Saavedra", "Carlos Araya", "Froilán Vargas", 
@@ -21,96 +21,102 @@ LISTA_SUPERVISORES = [
 ]
 
 # ==========================================
-# 2. ESTILOS CSS INTELIGENTES (V4.4)
+# 2. ESTILOS CSS V5.0 (CORRECCIÓN DEFINITIVA DE DESPLEGABLES)
 # ==========================================
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap');
         
-        /* --- A. TEMA GLOBAL (DASHBOARD OSCURO) --- */
+        /* --- A. TEMA GLOBAL (FONDO OSCURO) --- */
         .stApp { 
             background: linear-gradient(135deg, #05101a 0%, #0b2545 100%); 
             font-family: 'Montserrat', sans-serif; 
-        }
-
-        /* Por defecto: TODO EL TEXTO ES BLANCO (Para el Dashboard) */
-        h1, h2, h3, h4, p, span, div, label { color: #FFFFFF; }
-        
-        /* Inputs del Dashboard (Transparentes) */
-        .stTextInput > div > div > input, div[data-baseweb="select"] > div {
-            background-color: rgba(255, 255, 255, 0.1); 
             color: white;
-            border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* --- CORRECCIÓN 1: LISTA DESPLEGABLE (OPCIONES) --- */
-        /* Cuando haces clic y se abre la lista, forzamos texto NEGRO porque el fondo es blanco */
-        div[role="listbox"] ul {
-            background-color: #ffffff !important;
+        /* Regla General: Textos en Blanco (para el Dashboard) */
+        h1, h2, h3, h4, p, label, .stMarkdown { color: #FFFFFF !important; }
+        
+        /* --- B. SOLUCIÓN AL DESPLEGABLE INVISIBLE --- */
+        
+        /* 1. El cuadro del selector (antes de abrir) */
+        .stSelectbox div[data-baseweb="select"] > div {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
         }
-        div[role="listbox"] li, div[role="listbox"] li span, div[role="listbox"] li div {
-            color: #000000 !important; /* Texto negro para las opciones */
+        
+        /* 2. LA LISTA DESPLEGABLE (Cuando se abre) - ESTA ES LA CLAVE */
+        /* Forzamos el fondo del menú a BLANCO */
+        ul[data-testid="stSelectboxVirtualDropdown"] {
+            background-color: white !important;
         }
-        /* Color al pasar el mouse por una opción */
-        div[role="listbox"] li:hover {
+        
+        /* Forzamos el TEXTO de las opciones a NEGRO OSCURO */
+        ul[data-testid="stSelectboxVirtualDropdown"] li span {
+            color: #333333 !important;
+            font-weight: 500 !important;
+        }
+        
+        /* Efecto al pasar el mouse por una opción (Gris claro) */
+        ul[data-testid="stSelectboxVirtualDropdown"] li:hover {
             background-color: #f0f2f5 !important;
         }
+        
+        /* Corrección para navegadores que renderizan diferente (Fallback) */
+        div[role="listbox"] ul { background-color: white !important; }
+        div[role="listbox"] li span { color: black !important; }
 
-        /* --- CORRECCIÓN 2: BOTÓN 'BROWSE FILES' (CARGAR DOCUMENTOS) --- */
-        /* Específicamente el botón pequeño dentro del uploader */
+        /* --- C. BOTÓN BROWSE FILES (CARGAR DOCUMENTOS) --- */
         div[data-testid="stFileUploader"] button {
-            color: #333333 !important; /* Texto Oscuro */
-            background-color: #ffffff !important; /* Fondo Blanco */
+            color: #333333 !important; /* Texto negro */
+            background-color: #ffffff !important; /* Fondo blanco */
             border: 1px solid #ccc !important;
-            font-weight: 600 !important;
+            font-weight: bold !important;
         }
         div[data-testid="stFileUploader"] button:hover {
             border-color: #00C9FF !important;
             color: #00C9FF !important;
         }
-        /* El texto "Drag and drop files here" */
+        div[data-testid="stFileUploader"] section {
+            background-color: rgba(255,255,255,0.05) !important;
+        }
         div[data-testid="stFileUploader"] span, div[data-testid="stFileUploader"] small {
-            color: #e0e0e0 !important;
+             color: #e0e0e0 !important;
         }
 
-        /* --- B. EXCEPCIÓN: LOGIN (TEMA CLARO) --- */
+        /* --- D. LOGIN (MODO CLARO) --- */
         div[data-testid="stForm"] {
             background-color: #ffffff !important;
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-        div[data-testid="stForm"] label p, div[data-testid="stForm"] h1, div[data-testid="stForm"] h2, div[data-testid="stForm"] p {
-            color: #333333 !important;
-        }
-        div[data-testid="stForm"] input {
+        /* Texto oscuro dentro del Login */
+        div[data-testid="stForm"] * { color: #333333 !important; }
+        
+        /* Inputs del Login (Fondo Gris Claro) */
+        div[data-testid="stForm"] input, div[data-testid="stForm"] div[data-baseweb="select"] > div {
             background-color: #f0f2f5 !important;
-            color: #333333 !important;
             border: 1px solid #ccc !important;
-        }
-        /* Corrección select dentro del login */
-        div[data-testid="stForm"] div[data-baseweb="select"] > div {
-            background-color: #f0f2f5 !important;
             color: #333333 !important;
-            border: 1px solid #ccc !important;
         }
+        /* El texto seleccionado dentro del login también debe ser negro */
         div[data-testid="stForm"] div[data-baseweb="select"] span {
             color: #333333 !important;
         }
 
-        /* --- BOTÓN PRINCIPAL (ENVIAR/LOGIN) --- */
+        /* --- E. COMPONENTES GENERALES --- */
+        /* Botón Principal (Azul/Cian) */
         .stButton > button {
             background: linear-gradient(90deg, #00C9FF 0%, #004B8D 100%) !important; 
             color: white !important;
             border: none; border-radius: 50px; padding: 12px 24px; font-weight: bold;
             box-shadow: 0 4px 15px rgba(0, 75, 141, 0.3); width: 100%;
         }
-        .stButton > button:hover {
-            transform: scale(1.02);
-            box-shadow: 0 6px 20px rgba(0, 201, 255, 0.6);
-        }
-        
-        /* --- MÉTRICAS NEÓN --- */
+        .stButton > button p { color: white !important; } /* Texto interno blanco */
+
+        /* Métricas */
         div[data-testid="stMetric"] {
             background-color: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(0, 201, 255, 0.3);
@@ -119,7 +125,7 @@ st.markdown("""
         div[data-testid="stMetricLabel"] p { color: #e0e0e0 !important; font-size: 14px; }
         div[data-testid="stMetricValue"] div { color: #00C9FF !important; text-shadow: 0 0 10px rgba(0, 201, 255, 0.6); }
 
-        /* HEADER LOGIN */
+        /* Header Login */
         .login-header-card {
             background-color: #ffffff; border-radius: 20px; padding: 30px;
             text-align: center; margin-bottom: -30px; position: relative; z-index: 1;
@@ -174,7 +180,7 @@ if st.session_state.usuario_actual is None:
             <div class="login-header-card">
                 {logo_html}
                 <h2 style='margin-top:10px; font-weight:700;'>RMC CORPORATE</h2>
-                <p style='font-weight:600; font-size:12px; letter-spacing:2px;'>SECURE ACCESS V4.4</p>
+                <p style='font-weight:600; font-size:12px; letter-spacing:2px;'>SECURE ACCESS V5.0</p>
             </div>
         """, unsafe_allow_html=True)
         
