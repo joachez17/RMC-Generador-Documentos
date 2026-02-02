@@ -17,7 +17,7 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOPWOWEfYE2itRcwvn0Q
 
 LISTA_SUPERVISORES = [
     "Alioska Saavedra", "Carlos Araya", "Froilán Vargas", 
-    "Juan de los Rios", "Yorbin Valecillos"
+    "Juan de los Ríos", "Yorbin Valecillos"
 ]
 
 # ==========================================
