@@ -4,25 +4,44 @@ import fitz  # PyMuPDF
 from PIL import Image
 import io
 import base64
+import streamlit.elements.image as st_image
 
-st.set_page_config(page_title="Firmador Drag & Drop V9", layout="wide")
+# ==========================================
+# 🚑 PARCHE DE EMERGENCIA (CIRUGÍA)
+# ==========================================
+# Este bloque recrea la función 'image_to_url' que Streamlit borró.
+# Esto permite pasar objetos PIL sin que la app explote.
+if not hasattr(st_image, 'image_to_url'):
+    def image_to_url(image, width, clamp, channels, output_format, image_id, allow_emoji=True):
+        """
+        Esta función falsa convierte la imagen PIL a Base64 manualmente,
+        engañando a st_canvas para que funcione en versiones nuevas.
+        """
+        # Si la imagen ya es un string (URL), la devolvemos tal cual
+        if isinstance(image, str):
+            return image
+        
+        # Si es una imagen PIL, la convertimos a Data URL
+        with io.BytesIO() as buffer:
+            image.save(buffer, format="PNG")
+            img_str = base64.b64encode(buffer.getvalue()).decode()
+            return f"data:image/png;base64,{img_str}"
 
-st.title("✍️ Firmador V9 (Base64 Forzado)")
+    # Inyectamos la función falsa en Streamlit
+    st_image.image_to_url = image_to_url
+
+# ==========================================
+# CONFIGURACIÓN DE PÁGINA
+# ==========================================
+st.set_page_config(page_title="Firmador V10 (Parcheado)", layout="wide")
+
+st.title("✍️ Firmador V10 (Drag & Drop)")
 st.markdown("""
-**Pasos:**
-1. Selecciona **'✏️ Lápiz'** y haz tu firma (en cualquier parte).
-2. Selecciona **'✋ Mover'**, haz clic en tu firma y arrástrala.
+**Instrucciones:**
+1. Selecciona **'✏️ Lápiz'** y dibuja tu firma.
+2. Selecciona **'✋ Mover'** para arrastrarla y acomodarla.
 3. Presiona **Guardar**.
 """)
-
-# ==========================================
-# FUNCIÓN: Convertir Imagen a Texto (Base64)
-# ==========================================
-def imagen_a_base64(pil_image):
-    buff = io.BytesIO()
-    pil_image.save(buff, format="PNG")
-    img_str = base64.b64encode(buff.getvalue()).decode("utf-8")
-    return f"data:image/png;base64,{img_str}"
 
 # ==========================================
 # 1. CARGA DEL PDF
@@ -34,31 +53,30 @@ if uploaded_file is not None:
     doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
     total_paginas = len(doc)
 
-    c1, c2 = st.columns([1, 2])
-    with c1:
+    col_nav, col_tools = st.columns([1, 2])
+    with col_nav:
         pag_num = st.number_input("Página:", min_value=1, max_value=total_paginas, value=1) - 1
 
     # ==========================================
-    # 2. PREPARACIÓN INFALIBLE DE IMAGEN
+    # 2. PREPARACIÓN DE IMAGEN (Objeto PIL)
     # ==========================================
+    # En esta versión V10 volvemos a usar el Objeto PIL estándar
+    # porque el parche de arriba ya soluciona el problema de compatibilidad.
     page = doc[pag_num]
-    zoom = 1.5  # Zoom para buena calidad
+    zoom = 1.5  # Zoom para calidad
     mat = fitz.Matrix(zoom, zoom)
     
-    # Renderizar a imagen (Forzamos fondo blanco con alpha=False)
+    # Renderizar a imagen (Fondo blanco forzoso)
     pix = page.get_pixmap(matrix=mat, alpha=False)
     img_data = pix.tobytes("png")
     
-    # 1. Crear objeto imagen PIL
+    # Creamos el Objeto PIL (No texto, sino Objeto real)
     bg_pil = Image.open(io.BytesIO(img_data)).convert("RGB")
-    
-    # 2. CONVERTIR A TEXTO BASE64 (Aquí estaba el error antes)
-    bg_base64 = imagen_a_base64(bg_pil)
 
     # ==========================================
-    # 3. CONFIGURACIÓN DE HERRAMIENTAS
+    # 3. HERRAMIENTAS
     # ==========================================
-    with c2:
+    with col_tools:
         herramienta = st.radio(
             "Herramienta:",
             ("✏️ Lápiz", "✋ Mover (Drag & Drop)", "🗑️ Borrador"),
@@ -68,33 +86,35 @@ if uploaded_file is not None:
     if herramienta == "✏️ Lápiz":
         drawing_mode = "freedraw"
         stroke_width = 2
+        cursor = "crosshair"
     elif herramienta == "✋ Mover (Drag & Drop)":
         drawing_mode = "transform"
         stroke_width = 2
-        st.info("👆 Haz clic sobre tu firma para seleccionarla y moverla.")
+        cursor = "move"
+        st.info("👆 Haz clic en la firma para seleccionarla y moverla.")
     else:
         drawing_mode = "eraser"
         stroke_width = 10
+        cursor = "default"
 
     # ==========================================
     # 4. EL LIENZO (CANVAS)
     # ==========================================
-    # Ajustar ancho del canvas
+    # Ajuste de dimensiones
     canvas_width = 800
     canvas_height = int(canvas_width * bg_pil.height / bg_pil.width)
 
-    # ¡AQUÍ ESTÁ LA CORRECCIÓN!
-    # Pasamos 'bg_base64' (el texto), NO 'bg_pil' (el objeto)
+    # Ahora podemos pasar 'bg_pil' sin miedo gracias al parche
     canvas_result = st_canvas(
         fill_color="rgba(255, 165, 0, 0.0)",
         stroke_width=stroke_width,
         stroke_color="#000000",
-        background_image=bg_base64,  # <--- ESTO ES LO QUE ARREGLA TODO
+        background_image=bg_pil,  # <--- Pasamos el Objeto PIL (El parche lo maneja)
         update_streamlit=True,
         height=canvas_height,
         width=canvas_width,
         drawing_mode=drawing_mode,
-        key=f"canvas_v9_{uploaded_file.name}_{pag_num}",
+        key=f"canvas_v10_{uploaded_file.name}_{pag_num}",
     )
 
     # ==========================================
