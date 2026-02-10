@@ -4,9 +4,19 @@ import fitz  # PyMuPDF
 from PIL import Image
 import io
 
-st.set_page_config(page_title="Firmador Drag & Drop", layout="wide")
+# ==========================================
+# 0. PARCHE DE SEGURIDAD (FIX IMAGEN INVISIBLE)
+# ==========================================
+# Esto arregla el bug visual de Streamlit reciente
+import streamlit.elements.image as st_image
+if not hasattr(st_image, 'image_to_url'):
+    def image_to_url(image, width, clamp, channels, output_format, image_id, allow_emoji=True):
+        return None
+    st_image.image_to_url = image_to_url
 
-st.title("✍️ Firmar y Arrastrar (Drag & Drop)")
+st.set_page_config(page_title="Firmador Drag & Drop V7.1", layout="wide")
+
+st.title("✍️ Firmar y Arrastrar (Versión Blindada)")
 st.markdown("""
 **Instrucciones:**
 1. **Dibuja** tu firma (usa el lápiz).
@@ -24,24 +34,27 @@ if uploaded_file is not None:
     doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
     total_paginas = len(doc)
 
-    # Selector de página
     col_nav, col_tools = st.columns([1, 2])
     with col_nav:
         pag_num = st.number_input("Página:", min_value=1, max_value=total_paginas, value=1) - 1
 
-    # --- BLINDAJE DE IMAGEN (La corrección clave) ---
+    # ==========================================
+    # 2. PROCESAMIENTO DE IMAGEN DE FONDO
+    # ==========================================
     page = doc[pag_num]
-    # Zoom x1.5 para buena resolución en pantalla
+    # Zoom x1.5 para que se vea nítido
     zoom = 1.5
     mat = fitz.Matrix(zoom, zoom)
-    # alpha=False elimina transparencias (Fondo blanco forzoso)
+    
+    # IMPORTANTE: alpha=False fuerza fondo BLANCO (quita transparencias)
     pix = page.get_pixmap(matrix=mat, alpha=False)
     img_data = pix.tobytes("png")
-    # Convertir a RGB para compatibilidad total
+    
+    # Convertimos a imagen PIL y aseguramos modo RGB
     bg_image = Image.open(io.BytesIO(img_data)).convert("RGB")
 
     # ==========================================
-    # 2. HERRAMIENTAS DE EDICIÓN
+    # 3. HERRAMIENTAS
     # ==========================================
     with col_tools:
         herramienta = st.radio(
@@ -50,74 +63,71 @@ if uploaded_file is not None:
             horizontal=True
         )
 
-    # Configuración lógica del Canvas
     if herramienta == "✏️ Lápiz (Firmar)":
         drawing_mode = "freedraw"
         stroke_width = st.slider("Grosor de tinta:", 1, 5, 2)
+        cursor = "crosshair"
     elif herramienta == "✋ Mover y Ajustar (Drag & Drop)":
-        drawing_mode = "transform" # <--- ESTO ACTIVA EL ARRASTRAR
+        drawing_mode = "transform"
         stroke_width = 2
-        st.info("💡 Haz clic sobre tu firma para seleccionarla, luego arrástrala o cámbiale el tamaño desde las esquinas.")
+        cursor = "move"
+        st.info("💡 Haz clic sobre tu trazo para seleccionarlo y arrástralo.")
     else:
         drawing_mode = "eraser"
         stroke_width = 10
+        cursor = "default"
 
     # ==========================================
-    # 3. EL LIENZO INTERACTIVO
+    # 4. EL LIENZO (CANVAS)
     # ==========================================
-    # Calculamos dimensiones para que no se salga de la pantalla
-    ancho_canvas = 750
-    alto_canvas = int(ancho_canvas * bg_image.height / bg_image.width)
+    # Calculamos el tamaño correcto para la pantalla
+    canvas_width = 800
+    canvas_height = int(canvas_width * bg_image.height / bg_image.width)
 
-    # Mostramos el lienzo
+    # Mostramos el canvas
     canvas_result = st_canvas(
-        fill_color="rgba(255, 165, 0, 0.0)",  # Relleno transparente
+        fill_color="rgba(255, 165, 0, 0.0)",  # Transparente
         stroke_width=stroke_width,
-        stroke_color="#000000",               # Tinta Negra
-        background_image=bg_image,            # EL PDF DE FONDO
+        stroke_color="#000000",
+        background_image=bg_image,            # AQUÍ VA EL PDF
         update_streamlit=True,
-        height=alto_canvas,
-        width=ancho_canvas,
+        height=canvas_height,
+        width=canvas_width,
         drawing_mode=drawing_mode,
-        key=f"canvas_pdf_{pag_num}",         # Clave única para refrescar al cambiar pág
+        key=f"canvas_v7_{uploaded_file.name}_{pag_num}", # Clave única para forzar recarga
     )
 
     # ==========================================
-    # 4. GUARDAR CAMBIOS
+    # 5. GUARDAR
     # ==========================================
     if st.button("💾 GUARDAR DOCUMENTO FIRMADO", type="primary"):
         if canvas_result.image_data is not None:
-            # 1. Obtener lo que el usuario dibujó/movió
+            # Recuperar firma del canvas
             img_firma = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
             
-            # 2. Calcular la escala real (Pantalla vs PDF Original)
-            # El PDF original (page.rect) suele ser más grande o diferente que los 750px de pantalla
-            factor_escala_ancho = page.rect.width / ancho_canvas
-            factor_escala_alto = page.rect.height / alto_canvas
+            # Calcular escala real
+            factor_escala = page.rect.width / canvas_width
             
-            nuevo_ancho = int(img_firma.width * factor_escala_ancho)
-            nuevo_alto = int(img_firma.height * factor_escala_alto)
-            
+            # Redimensionar firma para el PDF real
+            nuevo_ancho = int(img_firma.width * factor_escala)
+            nuevo_alto = int(img_firma.height * factor_escala)
             img_firma_final = img_firma.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
 
-            # 3. Insertar en el PDF
-            # Como el canvas cubre TODA la hoja, insertamos la imagen superpuesta en (0,0)
-            # cubriendo toda la página con la capa transparente de la firma
-            rect_pagina = page.rect
-            
+            # Insertar en el PDF
             buffer = io.BytesIO()
             img_firma_final.save(buffer, format="PNG")
             
+            rect_pagina = page.rect
+            # Overlay=True pone la firma ENCIMA del texto existente
             page.insert_image(rect_pagina, stream=buffer.getvalue(), overlay=True)
             
-            # 4. Generar Descarga
             pdf_final = doc.convert_to_pdf()
             
-            st.success("✅ Firma aplicada correctamente.")
+            st.success("✅ Firma aplicada.")
             st.download_button(
-                label="📥 Descargar PDF Listo",
-                data=pdf_final,
-                file_name="Documento_Firmado_DragDrop.pdf",
+                "📥 Descargar PDF", 
+                data=pdf_final, 
+                file_name="Firmado.pdf", 
                 mime="application/pdf"
             )
         else:
