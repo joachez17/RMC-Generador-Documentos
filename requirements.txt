@@ -9,3 +9,5 @@ pandas
 plotly
 openpyxl
 requests
+pymupdf
+streamlit-drawable-canvas
