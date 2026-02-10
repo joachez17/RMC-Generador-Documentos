@@ -40,7 +40,7 @@ if uploaded_file is not None:
     # Convertimos la página del PDF a una IMAGEN para poder dibujar encima
     pix = page.get_pixmap(dpi=150)  # DPI 150 para buena calidad
     img_data = pix.tobytes("png")
-    bg_image = Image.open(io.BytesIO(img_data))
+    bg_image = Image.open(io.BytesIO(img_data)).convert("RGB")
 
     # ==========================================
     # 3. EL LIENZO DE FIRMA (CANVAS)
