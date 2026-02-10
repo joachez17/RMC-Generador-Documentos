@@ -1,8 +1,8 @@
-streamlit==1.35.0
+streamlit
 pandas
 jinja2
 weasyprint
-streamlit-drawable-canvas>=0.9.3
+streamlit-drawable-canvas
 Pillow
 numpy
 pandas
@@ -10,3 +10,4 @@ plotly
 openpyxl
 requests
 pymupdf
+streamlit-image-coordinates
