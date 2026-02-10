@@ -1,115 +1,155 @@
 import streamlit as st
 from streamlit_drawable_canvas import st_canvas
 import fitz  # PyMuPDF
-from PIL import Image
+from PIL import Image, ImageOps
 import io
 
-st.set_page_config(page_title="Firmador Visual Pro", layout="wide")
+st.set_page_config(page_title="Estampador de Firmas V6", layout="wide")
 
-st.title("✍️ Firmador Visual con Ajuste")
-st.markdown("1. Selecciona documento y página. | 2. Dibuja tu firma. | 3. Usa la herramienta 'Mover' para ajustarla.")
+# Inicializar estado para guardar la firma entre pasos
+if 'firma_guardada' not in st.session_state:
+    st.session_state.firma_guardada = None
+
+st.title("✍️ Estampador de Documentos V6")
 
 # ==========================================
-# 1. CARGA DEL PDF
+# PASO 1: CREAR Y GUARDAR LA FIRMA
 # ==========================================
-uploaded_file = st.file_uploader("📂 Sube tu PDF aquí:", type=["pdf"])
+st.markdown("### 1️⃣ Paso 1: Crea tu Firma")
+st.markdown("Dibuja tu firma en el recuadro. Cuando te guste, presiona **'Confirmar y Guardar Firma'**.")
 
-if uploaded_file is not None:
-    # Leer el PDF
-    doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
-    total_paginas = len(doc)
+col_firma, col_preview = st.columns([1, 1])
 
-    # --- SELECTOR DE PÁGINA ---
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c1:
-        pag_num = st.number_input("Ir a la Página:", min_value=1, max_value=total_paginas, value=1) - 1
-    
-    # ==========================================
-    # CORRECCIÓN DE IMAGEN (Aquí estaba el problema)
-    # ==========================================
-    page = doc[pag_num]
-    
-    # Zoom x2 para nitidez
-    mat = fitz.Matrix(2, 2)
-    
-    # 1. alpha=False OBLIGA a que el fondo sea blanco (no transparente)
-    pix = page.get_pixmap(matrix=mat, alpha=False) 
-    
-    img_data = pix.tobytes("png")
-    
-    # 2. .convert("RGB") OBLIGA a usar colores estándar de pantalla
-    bg_image = Image.open(io.BytesIO(img_data)).convert("RGB")
-
-    # ==========================================
-    # 2. CONFIGURACIÓN DE HERRAMIENTAS
-    # ==========================================
-    with c2:
-        st.write("🔧 **Herramientas:**")
-        modo = st.radio(
-            "Acción:",
-            ("Dibujar Firma", "✋ Mover/Ajustar Firma", "Borrador"),
-            horizontal=True
-        )
-    
-    if modo == "Dibujar Firma":
-        drawing_mode = "freedraw"
-    elif modo == "✋ Mover/Ajustar Firma":
-        drawing_mode = "transform"
-    else:
-        drawing_mode = "eraser"
-
-    stroke_width = 3
-    if modo == "Dibujar Firma":
-        stroke_width = st.slider("Grosor del lápiz:", 1, 10, 3)
-
-    # ==========================================
-    # 3. EL LIENZO (CANVAS)
-    # ==========================================
-    st.write(f"📄 **Viendo Página {pag_num + 1} de {total_paginas}** - Dibuja directamente abajo:")
-    
-    # Ajuste de dimensiones
-    canvas_width = 700
-    canvas_height = int(canvas_width * bg_image.height / bg_image.width)
-
-    canvas_result = st_canvas(
-        fill_color="rgba(255, 165, 0, 0.0)",  
-        stroke_width=stroke_width,
+with col_firma:
+    # Lienzo pequeño solo para firmar (Fondo transparente pero visible)
+    canvas_firma = st_canvas(
+        fill_color="rgba(255, 255, 255, 0.0)", 
+        stroke_width=3,
         stroke_color="#000000",
-        background_image=bg_image,  # Ahora sí debería verse la imagen
+        background_color="#FFFFFF", # Fondo blanco para ver bien lo que firmas
         update_streamlit=True,
-        height=canvas_height,
-        width=canvas_width,
-        drawing_mode=drawing_mode,
-        key=f"canvas_page_{pag_num}", # Clave única por página
+        height=200,
+        width=400,
+        drawing_mode="freedraw",
+        key="canvas_creacion_firma",
     )
-
-    # ==========================================
-    # 4. GUARDADO
-    # ==========================================
-    if st.button("💾 GUARDAR DOCUMENTO FIRMADO", type="primary"):
-        if canvas_result.image_data is not None:
-            img_firma = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
+    
+    if st.button("💾 Confirmar y Guardar Firma", type="primary"):
+        if canvas_firma.image_data is not None:
+            # Convertir a imagen usable y guardar en memoria
+            img_raw = Image.fromarray(canvas_firma.image_data.astype('uint8'), 'RGBA')
             
-            # Recálculo de escala para alta calidad
-            factor_escala = page.rect.width / canvas_width
-            nueva_ancho = int(img_firma.width * factor_escala)
-            nueva_alto = int(img_firma.height * factor_escala)
-            img_firma_resized = img_firma.resize((nueva_ancho, nueva_alto), Image.LANCZOS)
+            # Recortar los bordes vacíos para que solo quede la tinta
+            bbox = img_raw.getbbox()
+            if bbox:
+                img_recortada = img_raw.crop(bbox)
+                st.session_state.firma_guardada = img_recortada
+                st.success("✅ ¡Firma guardada en memoria!")
+            else:
+                st.warning("⚠️ El lienzo está vacío.")
 
+with col_preview:
+    if st.session_state.firma_guardada:
+        st.write("Visor de Firma Guardada:")
+        st.image(st.session_state.firma_guardada, caption="Esta firma se usará en el documento.")
+    else:
+        st.info("Aquí aparecerá tu firma confirmada.")
+
+st.markdown("---")
+
+# ==========================================
+# PASO 2: SELECCIONAR DOCUMENTO Y ESTAMPAR
+# ==========================================
+st.markdown("### 2️⃣ Paso 2: Ubicar en el Documento")
+
+if st.session_state.firma_guardada is None:
+    st.warning("🔒 Por favor, completa el Paso 1 para desbloquear el documento.")
+else:
+    uploaded_file = st.file_uploader("📂 Carga el PDF a firmar:", type=["pdf"])
+
+    if uploaded_file is not None:
+        # Abrir PDF
+        doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
+        total_paginas = len(doc)
+        
+        c_pag, c_controles = st.columns([1, 2])
+        
+        with c_pag:
+            pag_num = st.number_input("Página del documento:", min_value=1, max_value=total_paginas, value=1) - 1
+        
+        # Preparar imagen de fondo (El PDF)
+        page = doc[pag_num]
+        pix = page.get_pixmap(dpi=100) # Calidad media para vista previa rápida
+        pdf_img = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
+        
+        # --- CONTROLES DE POSICIÓN ---
+        st.write("🎛️ **Panel de Control de la Firma:**")
+        
+        col_x, col_y, col_tam = st.columns(3)
+        with col_x:
+            # Slider Horizontal (0 a Ancho del PDF)
+            pos_x = st.slider("↔️ Mover Horizontal", 0, pdf_img.width, 50)
+        with col_y:
+            # Slider Vertical (0 a Alto del PDF)
+            pos_y = st.slider("↕️ Mover Vertical", 0, pdf_img.height, pdf_img.height - 100)
+        with col_tam:
+            # Tamaño de la firma
+            scale_factor = st.slider("🔍 Tamaño Firma", 0.1, 2.0, 0.5)
+
+        # --- FUSIÓN VISUAL (PREVIEW) ---
+        # Crear una copia del PDF para no dañarlo
+        preview_img = pdf_img.copy()
+        
+        # Preparar la firma
+        firma = st.session_state.firma_guardada
+        nuevo_ancho = int(firma.width * scale_factor)
+        nuevo_alto = int(firma.height * scale_factor)
+        firma_resized = firma.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
+        
+        # Pegar la firma sobre la copia del PDF (Usamos la máscara para transparencia)
+        preview_img.paste(firma_resized, (pos_x, pos_y), firma_resized)
+        
+        # Mostrar el resultado
+        st.image(preview_img, caption="Vista Previa en Tiempo Real", use_container_width=True)
+
+        # ==========================================
+        # PASO 3: GUARDADO FINAL
+        # ==========================================
+        if st.button("🚀 ESTAMPAR DEFINITIVAMENTE Y DESCARGAR", type="primary"):
+            # Aquí hacemos la matemática para traducir de "Pixeles de Pantalla" a "Coordenadas PDF"
+            
+            # 1. Recuperar la página original en alta calidad
+            page_real = doc[pag_num]
+            rect_real = page_real.rect
+            
+            # 2. Calcular factor de conversión (Pantalla vs Realidad PDF)
+            scale_x = rect_real.width / pdf_img.width
+            scale_y = rect_real.height / pdf_img.height
+            
+            # 3. Calcular posición real
+            real_x = pos_x * scale_x
+            real_y = pos_y * scale_y
+            real_width = nuevo_ancho * scale_x
+            real_height = nuevo_alto * scale_y
+            
+            # 4. Insertar la imagen en el PDF real
+            rect_insert = fitz.Rect(real_x, real_y, real_x + real_width, real_y + real_height)
+            
+            # Convertir la firma a bytes para PyMuPDF
             buffer_firma = io.BytesIO()
-            img_firma_resized.save(buffer_firma, format="PNG")
+            st.session_state.firma_guardada.save(buffer_firma, format="PNG")
             
-            rect = page.rect
-            page.insert_image(rect, stream=buffer_firma.getvalue())
+            page_real.insert_image(rect_insert, stream=buffer_firma.getvalue())
             
+            # 5. Generar descarga
             pdf_bytes = doc.convert_to_pdf()
             
-            st.success(f"✅ ¡Firma estampada en la página {pag_num + 1}!")
+            st.balloons()
+            st.success("✅ Documento firmado correctamente.")
             st.download_button(
-                label="📥 Descargar PDF Final",
+                label="📥 DESCARGAR PDF FIRMADO",
                 data=pdf_bytes,
-                file_name="Documento_Firmado.pdf",
+                file_name="Documento_Firmado_V6.pdf",
                 mime="application/pdf"
             )
-        else:
-            st.warning("⚠️ No has dibujado nada aún.")
+            
