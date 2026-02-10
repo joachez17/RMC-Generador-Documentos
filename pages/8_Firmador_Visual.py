@@ -4,124 +4,131 @@ import fitz  # PyMuPDF
 from PIL import Image
 import io
 import base64
-import streamlit.elements.image as st_image
+
+st.set_page_config(page_title="Firmador V13 (CSS)", layout="wide")
+
+st.title("✍️ Firmador Infalible (CSS)")
+st.markdown("""
+**Instrucciones:**
+1. **Dibuja** tu firma con el lápiz.
+2. Cambia a **✋ Mover** para acomodarla.
+3. Presiona **Guardar**.
+""")
 
 # ==========================================
-# 🚑 PARCHE DE COMPATIBILIDAD (CRÍTICO)
+# FUNCIONES AUXILIARES
 # ==========================================
-# Esto permite que Streamlit acepte imágenes de fondo sin errores
-if not hasattr(st_image, 'image_to_url'):
-    def image_to_url(image, width, clamp, channels, output_format, image_id, allow_emoji=True):
-        if isinstance(image, str):
-            return image
-        # Convertimos a JPEG ligero para evitar bloqueos de memoria
-        with io.BytesIO() as buffer:
-            image.save(buffer, format="JPEG", quality=80)
-            img_str = base64.b64encode(buffer.getvalue()).decode()
-            return f"data:image/jpeg;base64,{img_str}"
-    st_image.image_to_url = image_to_url
-
-st.set_page_config(page_title="Firmador V12", layout="wide")
-
-st.title("✍️ Firmador de Documentos PDF")
-st.markdown("Sube tu PDF, firma con el lápiz y luego acomoda la firma.")
+def imagen_a_base64(pil_image):
+    buffer = io.BytesIO()
+    # Guardamos como PNG para mantener calidad
+    pil_image.save(buffer, format="PNG")
+    img_str = base64.b64encode(buffer.getvalue()).decode()
+    return f"data:image/png;base64,{img_str}"
 
 # ==========================================
 # 1. CARGA DEL PDF
 # ==========================================
-uploaded_file = st.file_uploader("📂 Selecciona tu archivo PDF:", type=["pdf"])
+uploaded_file = st.file_uploader("📂 Cargar PDF:", type=["pdf"])
 
 if uploaded_file is not None:
-    # Cargar el PDF en memoria
+    # Cargar PDF
     doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
     total_paginas = len(doc)
 
-    c1, c2 = st.columns([1, 2])
-    with c1:
-        pag_num = st.number_input("Página a firmar:", min_value=1, max_value=total_paginas, value=1) - 1
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        pag_num = st.number_input("Página:", min_value=1, max_value=total_paginas, value=1) - 1
 
     # ==========================================
-    # 2. EL TRUCO: PDF -> FOTO (JPEG)
+    # 2. PREPARACIÓN DE LA IMAGEN DE FONDO
     # ==========================================
     page = doc[pag_num]
+    zoom = 1.5
+    mat = fitz.Matrix(zoom, zoom)
+    pix = page.get_pixmap(matrix=mat, alpha=False)
     
-    # Zoom 1.5 para que se vea nítido
-    mat = fitz.Matrix(1.5, 1.5)
-    pix = page.get_pixmap(matrix=mat, alpha=False) # alpha=False fuerza fondo blanco
+    # Crear imagen PIL
+    bg_pil = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
     
-    # Convertimos a imagen PIL (RGB)
-    bg_pil_raw = Image.open(io.BytesIO(pix.tobytes("ppm"))).convert("RGB")
+    # REDIMENSIÓN FIJA (Vital para que coincida CSS y Canvas)
+    # Fijamos el ancho en 800px
+    ancho_fijo = 800
+    alto_fijo = int(ancho_fijo * bg_pil.height / bg_pil.width)
+    bg_pil_resized = bg_pil.resize((ancho_fijo, alto_fijo), Image.LANCZOS)
     
-    # --- REDIMENSIÓN OBLIGATORIA ---
-    # Ajustamos la imagen al ancho de la pantalla (800px)
-    # Esto evita que la imagen sea gigante y el navegador la ponga blanca.
-    ancho_pantalla = 800
-    alto_pantalla = int(ancho_pantalla * bg_pil_raw.height / bg_pil_raw.width)
-    
-    bg_pil_opt = bg_pil_raw.resize((ancho_pantalla, alto_pantalla), Image.LANCZOS)
+    # Convertimos a Base64 para el CSS
+    bg_base64 = imagen_a_base64(bg_pil_resized)
 
     # ==========================================
-    # 3. HERRAMIENTAS DE FIRMA
+    # 3. LA MAGIA DEL CSS (Aquí forzamos el fondo)
     # ==========================================
-    with c2:
-        modo = st.radio("Modo:", ("✏️ Firmar", "✋ Mover Firma", "🗑️ Borrar"), horizontal=True)
+    # Inyectamos estilos para poner la imagen DETRÁS del canvas
+    st.markdown(
+        f"""
+        <style>
+        /* Buscamos el contenedor del canvas y le ponemos la imagen de fondo */
+        div[data-testid="stCanvas"] {{
+            background-image: url("{bg_base64}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: {ancho_fijo}px;
+            height: {alto_fijo}px;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-    if modo == "✏️ Firmar":
+    # ==========================================
+    # 4. HERRAMIENTAS Y LIENZO
+    # ==========================================
+    with col2:
+        herramienta = st.radio("Herramienta:", ("✏️ Lápiz", "✋ Mover", "🗑️ Borrador"), horizontal=True)
+
+    if herramienta == "✏️ Lápiz":
         d_mode = "freedraw"
-        cursor = "crosshair"
-    elif modo == "✋ Mover Firma":
+    elif herramienta == "✋ Mover":
         d_mode = "transform"
-        cursor = "move"
-        st.info("👆 Haz clic en tu firma para moverla.")
+        st.info("Haz clic en la firma para arrastrarla.")
     else:
         d_mode = "eraser"
-        cursor = "default"
 
-    # ==========================================
-    # 4. EL LIENZO (CANVAS)
-    # ==========================================
+    # LIENZO TRANSPARENTE
+    # background_image=None (Para que no intente cargar nada y fallar)
+    # background_color="rgba(0,0,0,0)" (Transparente total)
     canvas_result = st_canvas(
         fill_color="rgba(255, 165, 0, 0.0)",
         stroke_width=2,
         stroke_color="#000000",
-        background_image=bg_pil_opt,  # <--- Aquí va la "FOTO" del PDF
+        background_color="rgba(0, 0, 0, 0)", # Transparente
+        background_image=None,               # ¡No le pasamos imagen al componente!
         update_streamlit=True,
-        height=alto_pantalla,
-        width=ancho_pantalla,
+        height=alto_fijo,
+        width=ancho_fijo,
         drawing_mode=d_mode,
-        key=f"canvas_v12_{uploaded_file.name}_{pag_num}",
+        key=f"canvas_css_{uploaded_file.name}_{pag_num}",
     )
 
-    # 🕵️‍♂️ MONITOR DE DIAGNÓSTICO (Si ves esto, el PDF se leyó bien)
-    with st.expander("¿Pantalla blanca? Ver imagen de referencia"):
-        st.write("Si ves la imagen de abajo, el PDF se cargó correctamente.")
-        st.image(bg_pil_opt, caption="Referencia del PDF", width=400)
-
     # ==========================================
-    # 5. GUARDAR Y RECONSTRUIR PDF
+    # 5. GUARDAR
     # ==========================================
-    if st.button("💾 GUARDAR DOCUMENTO FIRMADO", type="primary"):
+    if st.button("💾 GUARDAR FIRMA", type="primary"):
         if canvas_result.image_data is not None:
-            # Recuperar la firma dibujada
             img_firma = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
             
-            # --- MATEMÁTICAS DE ESCALA ---
-            # El PDF real tiene un tamaño diferente a la pantalla (800px)
-            # Calculamos la proporción para que la firma quede en el lugar exacto.
-            scale_factor = page.rect.width / ancho_pantalla
-            
-            new_w = int(img_firma.width * scale_factor)
-            new_h = int(img_firma.height * scale_factor)
+            # Calcular escala real
+            scale = page.rect.width / ancho_fijo
+            new_w = int(img_firma.width * scale)
+            new_h = int(img_firma.height * scale)
             img_firma_final = img_firma.resize((new_w, new_h), Image.LANCZOS)
             
-            # Pegar en el PDF Original
+            # Insertar
             buffer = io.BytesIO()
             img_firma_final.save(buffer, format="PNG")
             page.insert_image(page.rect, stream=buffer.getvalue(), overlay=True)
             
-            # Generar descarga
-            pdf_final = doc.convert_to_pdf()
-            st.success("✅ ¡Firma aplicada con éxito!")
-            st.download_button("📥 Descargar PDF Final", data=pdf_final, file_name="Firmado.pdf", mime="application/pdf")
+            st.success("✅ Documento firmado.")
+            st.download_button("📥 Descargar", data=doc.convert_to_pdf(), file_name="Firmado.pdf", mime="application/pdf")
         else:
-            st.warning("⚠️ Primero debes dibujar una firma.")
+            st.warning("⚠️ Dibuja primero.")
