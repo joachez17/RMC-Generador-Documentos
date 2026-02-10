@@ -2,7 +2,7 @@ streamlit
 pandas
 jinja2
 weasyprint
-streamlit-drawable-canvas
+streamlit-drawable-canvas>=0.9.3
 Pillow
 numpy
 pandas
