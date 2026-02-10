@@ -21,12 +21,12 @@ st.markdown("Dibuja tu firma en el recuadro. Cuando te guste, presiona **'Confir
 col_firma, col_preview = st.columns([1, 1])
 
 with col_firma:
-    # Lienzo pequeño solo para firmar (Fondo transparente pero visible)
+    # Lienzo pequeño solo para firmar
     canvas_firma = st_canvas(
         fill_color="rgba(255, 255, 255, 0.0)", 
         stroke_width=3,
         stroke_color="#000000",
-        background_color="#FFFFFF", # Fondo blanco para ver bien lo que firmas
+        background_color="#FFFFFF",
         update_streamlit=True,
         height=200,
         width=400,
@@ -39,12 +39,13 @@ with col_firma:
             # Convertir a imagen usable y guardar en memoria
             img_raw = Image.fromarray(canvas_firma.image_data.astype('uint8'), 'RGBA')
             
-            # Recortar los bordes vacíos para que solo quede la tinta
+            # Recortar los bordes vacíos
             bbox = img_raw.getbbox()
             if bbox:
                 img_recortada = img_raw.crop(bbox)
                 st.session_state.firma_guardada = img_recortada
                 st.success("✅ ¡Firma guardada en memoria!")
+                st.rerun() # Recargar para mostrar la preview
             else:
                 st.warning("⚠️ El lienzo está vacío.")
 
@@ -87,17 +88,16 @@ else:
         
         col_x, col_y, col_tam = st.columns(3)
         with col_x:
-            # Slider Horizontal (0 a Ancho del PDF)
+            # Slider Horizontal
             pos_x = st.slider("↔️ Mover Horizontal", 0, pdf_img.width, 50)
         with col_y:
-            # Slider Vertical (0 a Alto del PDF)
+            # Slider Vertical
             pos_y = st.slider("↕️ Mover Vertical", 0, pdf_img.height, pdf_img.height - 100)
         with col_tam:
             # Tamaño de la firma
             scale_factor = st.slider("🔍 Tamaño Firma", 0.1, 2.0, 0.5)
 
         # --- FUSIÓN VISUAL (PREVIEW) ---
-        # Crear una copia del PDF para no dañarlo
         preview_img = pdf_img.copy()
         
         # Preparar la firma
@@ -106,23 +106,21 @@ else:
         nuevo_alto = int(firma.height * scale_factor)
         firma_resized = firma.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
         
-        # Pegar la firma sobre la copia del PDF (Usamos la máscara para transparencia)
+        # Pegar la firma sobre la copia del PDF
         preview_img.paste(firma_resized, (pos_x, pos_y), firma_resized)
         
-        # Mostrar el resultado
-        st.image(preview_img, caption="Vista Previa en Tiempo Real", use_container_width=True)
+        # Mostrar el resultado (CORREGIDO AQUÍ)
+        st.image(preview_img, caption="Vista Previa en Tiempo Real", use_column_width=True)
 
         # ==========================================
         # PASO 3: GUARDADO FINAL
         # ==========================================
         if st.button("🚀 ESTAMPAR DEFINITIVAMENTE Y DESCARGAR", type="primary"):
-            # Aquí hacemos la matemática para traducir de "Pixeles de Pantalla" a "Coordenadas PDF"
-            
             # 1. Recuperar la página original en alta calidad
             page_real = doc[pag_num]
             rect_real = page_real.rect
             
-            # 2. Calcular factor de conversión (Pantalla vs Realidad PDF)
+            # 2. Calcular factor de conversión
             scale_x = rect_real.width / pdf_img.width
             scale_y = rect_real.height / pdf_img.height
             
@@ -135,7 +133,6 @@ else:
             # 4. Insertar la imagen en el PDF real
             rect_insert = fitz.Rect(real_x, real_y, real_x + real_width, real_y + real_height)
             
-            # Convertir la firma a bytes para PyMuPDF
             buffer_firma = io.BytesIO()
             st.session_state.firma_guardada.save(buffer_firma, format="PNG")
             
@@ -152,4 +149,3 @@ else:
                 file_name="Documento_Firmado_V6.pdf",
                 mime="application/pdf"
             )
-            
