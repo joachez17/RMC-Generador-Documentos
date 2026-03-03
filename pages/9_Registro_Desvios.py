@@ -7,7 +7,7 @@ import requests
 st.set_page_config(page_title="Registro de Desvíos", page_icon="🚧", layout="wide")
 
 # ⚠️ PEGA AQUÍ LA MISMA URL QUE USAS EN EL PORTAL DE SUPERVISORES
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkZbyfi9oNsfZiajLmI5mWRoGyWsFww4g9N-uGSNx8-h4gqMqaILtm7QgcRjq60RlS9w/exec" 
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgY0zTgkMKbfY3h55nXQ_hnaqfpzgRUcoLB05uwr3Hgxfuu0kK3-YLYDr3siGwf2vREw/exec" 
 
 st.title("🚧 Registro de Desvíos y Positivos")
 st.markdown("Ingresa los datos del evento para registrarlos en la base de datos central.")
