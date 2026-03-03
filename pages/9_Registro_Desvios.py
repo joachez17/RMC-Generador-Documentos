@@ -71,9 +71,15 @@ if enviado:
             try:
                 respuesta = requests.post(APPS_SCRIPT_URL, json=payload)
                 if respuesta.status_code == 200:
-                    st.balloons()
-                    st.success("✅ ¡Registro guardado exitosamente!")
-                else:
-                    st.error("❌ Error al conectar con la base de datos.")
+                    # Leer la respuesta exacta del robot
+                    datos_respuesta = respuesta.json() 
+                    
+                    if datos_respuesta.get("resultado") == "OK":
+                        st.success("✅ ¡Registro guardado exitosamente! Ve a la pestaña Dashboard para ver cómo se actualiza.")
+                    else:
+                        # ¡Aquí nos dirá la verdad!
+                        st.error(f"❌ El Robot reportó un error: {datos_respuesta.get('mensaje')}")
+                else: 
+                    st.error(f"❌ Error de conexión HTTP: {respuesta.status_code}")
             except Exception as e:
-                st.error(f"❌ Error de conexión: {str(e)}")
+                st.error(f"❌ Error interno: {str(e)}")
