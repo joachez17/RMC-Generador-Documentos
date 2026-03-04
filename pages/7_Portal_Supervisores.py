@@ -17,7 +17,7 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOPWOWEfYE2itRcwvn0Q
 
 LISTA_SUPERVISORES = [
     "Alioska Saavedra", "Carlos Araya", "Froilán Vargas", 
-    "Juan de los Ríos", "Yorbin Valecillos", "Boris Manque"
+    "Juan de los Ríos", "Yorbin Valecillos", "Boris Manque", "Joaquin Sanchez"
 ]
 
 # DICCIONARIOS DE MESES PARA LA MÁQUINA DEL TIEMPO
