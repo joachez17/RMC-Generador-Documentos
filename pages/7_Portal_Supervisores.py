@@ -20,6 +20,10 @@ LISTA_SUPERVISORES = [
     "Juan de los Ríos", "Yorbin Valecillos", "Boris Manque"
 ]
 
+# DICCIONARIOS DE MESES PARA LA MÁQUINA DEL TIEMPO
+MESES_NOMBRES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+MESES_ABV = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"]
+
 # ==========================================
 # 2. ESTILOS CSS V5.2 (FULL DASHBOARD + CORRECCIÓN MÓVIL)
 # ==========================================
@@ -36,23 +40,16 @@ st.markdown("""
         h1, h2, h3, h4, p, label, .stMarkdown { color: #FFFFFF !important; }
 
         /* --- B. CORRECCIÓN CRÍTICA MÓVIL (DESPLEGABLES) --- */
-        /* Esta sección fuerza a que los menús desplegables sean BLANCOS con letras NEGRAS en el celular */
-        
-        /* 1. Caja del selector cerrada */
         .stSelectbox div[data-baseweb="select"] > div {
             background-color: rgba(255, 255, 255, 0.1) !important;
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
             color: white !important;
         }
         .stSelectbox svg { fill: white !important; }
-
-        /* 2. MENÚ DESPLEGADO (Aquí está la magia para el móvil) */
         div[data-baseweb="popover"], div[data-baseweb="menu"], ul[data-testid="stSelectboxVirtualDropdown"] {
-            background-color: #ffffff !important; /* Fondo Blanco */
+            background-color: #ffffff !important;
             border: 1px solid #ccc !important;
         }
-        
-        /* 3. TEXTO DE LAS OPCIONES (NEGRO FUERTE) */
         div[data-baseweb="popover"] li, div[data-baseweb="menu"] li, ul[data-testid="stSelectboxVirtualDropdown"] li {
             color: #000000 !important;
             background-color: white !important;
@@ -61,14 +58,12 @@ st.markdown("""
             color: #000000 !important;
             font-weight: 600 !important;
         }
-        
-        /* Hover (cuando pasas el dedo) */
         div[data-baseweb="popover"] li:hover, ul[data-testid="stSelectboxVirtualDropdown"] li:hover {
             background-color: #f0f2f5 !important;
             color: #004B8D !important;
         }
 
-        /* --- C. BOTÓN BROWSE FILES (Visible en Móvil) --- */
+        /* --- C. BOTÓN BROWSE FILES --- */
         div[data-testid="stFileUploader"] button {
             color: #333333 !important; 
             background-color: #ffffff !important; 
@@ -79,21 +74,16 @@ st.markdown("""
              color: #e0e0e0 !important;
         }
 
-        /* --- D. ESTILOS DEL DASHBOARD (GRÁFICOS Y TABLAS) --- */
-        /* Tabla */
+        /* --- D. ESTILOS DEL DASHBOARD --- */
         div[data-testid="stDataFrame"] {
             background-color: rgba(255,255,255,0.05);
             padding: 10px; border-radius: 10px;
         }
-        
-        /* Botones */
         .stButton > button {
             background: linear-gradient(90deg, #00C9FF 0%, #004B8D 100%) !important; 
             color: white !important; border: none; border-radius: 50px; font-weight: bold; width: 100%;
             box-shadow: 0 4px 15px rgba(0, 75, 141, 0.3);
         }
-
-        /* Métricas */
         div[data-testid="stMetric"] {
             background-color: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(0, 201, 255, 0.3);
@@ -111,8 +101,6 @@ st.markdown("""
             background-color: #f0f2f5 !important; color: #333333 !important; border: 1px solid #ccc !important;
         }
         div[data-testid="stForm"] div[data-baseweb="select"] span { color: #333333 !important; }
-
-        /* Header Login */
         .login-header-card {
             background-color: #ffffff; border-radius: 20px; padding: 20px;
             text-align: center; margin-bottom: -30px; position: relative; z-index: 1;
@@ -164,7 +152,7 @@ if st.session_state.usuario_actual is None:
             <div class="login-header-card">
                 {logo_html}
                 <h2 style='margin-top:10px; font-weight:700; color: #0b1c2c !important;'>RMC CORPORATE</h2>
-                <p style='font-weight:600; font-size:12px; letter-spacing:2px; color: #00C9FF !important;'>SECURE ACCESS V5.2</p>
+                <p style='font-weight:600; font-size:12px; letter-spacing:2px; color: #00C9FF !important;'>SECURE ACCESS V6.0</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -187,9 +175,15 @@ else:
         if st.button("SALIR"):
             st.session_state.usuario_actual = None
             st.rerun()
+    
     st.markdown("---")
 
-    with st.spinner("Sincronizando satélite... 🛰️"):
+    # MÁQUINA DEL TIEMPO: Selector de Mes
+    mes_actual_idx = date.today().month - 1
+    mes_seleccionado = st.selectbox("🗓️ SELECCIONAR MES DE CONSULTA:", MESES_NOMBRES, index=mes_actual_idx)
+    mes_abv = MESES_ABV[MESES_NOMBRES.index(mes_seleccionado)] # Convierte "Marzo" en "MAR"
+
+    with st.spinner(f"Sincronizando datos de {mes_seleccionado}... 🛰️"):
         df_raw = cargar_datos_google(usuario)
 
     if df_raw is not None and not df_raw.empty:
@@ -202,57 +196,65 @@ else:
             df = df_raw.iloc[header_idx + 1:].copy()
             df.columns = df_raw.iloc[header_idx]
             df.columns = df.columns.str.strip()
-            col_map = {"NOMBRE DE LA ACTIVIDAD": "Actividad", "CANTIDAD ASIGNADA": "Programado", "CANTIDAD REALIZADA": "Realizado"}
-            df = df.rename(columns={c: col_map[c] for c in df.columns if c in col_map})
-            
-            if "Programado" in df.columns:
-                df["Programado"] = pd.to_numeric(df["Programado"], errors='coerce').fillna(0)
-                df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
-                df = df[df["Programado"] > 0]
-                pct = (df["Realizado"].sum() / df["Programado"].sum() * 100) if df["Programado"].sum() > 0 else 0
-                
-                # --- AQUÍ ESTÁN TUS GRÁFICOS Y TABLAS DE VUELTA ---
-                k1, k2, k3 = st.columns(3)
-                k1.metric("META MENSUAL", int(df["Programado"].sum()))
-                k2.metric("REALIZADO", int(df["Realizado"].sum()))
-                k3.metric("AVANCE TOTAL", f"{pct:.1f}%")
-                
-                st.markdown("<br>", unsafe_allow_html=True)
 
-                c_viz, c_tab = st.columns([1, 2])
-                with c_viz:
-                    # Gráfico de Velocímetro
-                    fig = go.Figure(go.Indicator(
-                        mode="gauge+number", value=pct, 
-                        gauge={'bar': {'color': "#00C9FF"}, 'axis': {'range': [None, 100], 'tickcolor':"white"}, 'bgcolor': "rgba(255,255,255,0.1)", 'bordercolor': "white"}, 
-                        number={'font': {'color': "white"}}
-                    ))
-                    fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={'color': "white"}, height=280, margin=dict(t=30, b=10, l=30, r=30))
-                    st.plotly_chart(fig, use_container_width=True)
+            # BUSCAMOS LAS COLUMNAS DEL MES SELECCIONADO
+            col_meta = f"META {mes_abv}"
+            col_realizado = f"REALIZADO {mes_abv}"
+
+            if col_meta in df.columns and col_realizado in df.columns:
+                col_map = {"NOMBRE DE LA ACTIVIDAD": "Actividad", col_meta: "Programado", col_realizado: "Realizado"}
+                df = df.rename(columns={c: col_map[c] for c in df.columns if c in col_map})
                 
-                with c_tab:
-                    # Tabla de datos
-                    df["Estado"] = (df["Realizado"] / df["Programado"]) * 100
-                    st.dataframe(df[["Actividad", "Programado", "Realizado", "Estado"]], 
-                                 column_config={"Estado": st.column_config.ProgressColumn(format="%d%%", min_value=0, max_value=100)}, 
-                                 hide_index=True, height=280)
+                if "Programado" in df.columns:
+                    df["Programado"] = pd.to_numeric(df["Programado"], errors='coerce').fillna(0)
+                    df["Realizado"] = pd.to_numeric(df["Realizado"], errors='coerce').fillna(0)
+                    df = df[df["Programado"] > 0]
+                    pct = (df["Realizado"].sum() / df["Programado"].sum() * 100) if df["Programado"].sum() > 0 else 0
+                    
+                    # --- DASHBOARD ---
+                    k1, k2, k3 = st.columns(3)
+                    k1.metric(f"META {mes_abv}", int(df["Programado"].sum()))
+                    k2.metric(f"REALIZADO {mes_abv}", int(df["Realizado"].sum()))
+                    k3.metric("AVANCE DEL MES", f"{pct:.1f}%")
+                    
+                    st.markdown("<br>", unsafe_allow_html=True)
 
-                st.markdown("---")
-                # Zona de Carga (Ahora abajo, como antes)
-                st.markdown("""<div style="background-color: rgba(0, 201, 255, 0.1); padding: 10px; border-left: 5px solid #00C9FF; border-radius: 5px; margin-bottom: 20px;"><p style="margin: 0; color: white !important;">📸 <b>ZONA DE CARGA:</b> Puede seleccionar múltiples fotos.</p></div>""", unsafe_allow_html=True)
+                    c_viz, c_tab = st.columns([1, 2])
+                    with c_viz:
+                        fig = go.Figure(go.Indicator(
+                            mode="gauge+number", value=pct, 
+                            gauge={'bar': {'color': "#00C9FF"}, 'axis': {'range': [None, 100], 'tickcolor':"white"}, 'bgcolor': "rgba(255,255,255,0.1)", 'bordercolor': "white"}, 
+                            number={'font': {'color': "white"}}
+                        ))
+                        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={'color': "white"}, height=280, margin=dict(t=30, b=10, l=30, r=30))
+                        st.plotly_chart(fig, use_container_width=True)
+                    
+                    with c_tab:
+                        df["Estado"] = (df["Realizado"] / df["Programado"]) * 100
+                        st.dataframe(df[["Actividad", "Programado", "Realizado", "Estado"]], 
+                                     column_config={"Estado": st.column_config.ProgressColumn(format="%d%%", min_value=0, max_value=100)}, 
+                                     hide_index=True, height=280)
 
-                c1, c2 = st.columns(2)
-                with c1:
-                    df_pend = df[df["Realizado"] < df["Programado"]]
-                    ops = df_pend["Actividad"].unique() if not df_pend.empty else df["Actividad"].unique()
-                    act_sel = st.selectbox("SELECCIONE ACTIVIDAD:", ops)
-                with c2:
-                    archivos = st.file_uploader("CARGAR DOCUMENTOS (IMG):", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
-                    if archivos and st.button("ENVIAR TODO A BASE CENTRAL", type="primary"):
-                        with st.spinner(f"Subiendo {len(archivos)} páginas..."):
-                            if enviar_datos_y_fotos(usuario, act_sel, archivos):
-                                st.success("✅ GUARDADO")
-                                time.sleep(2)
-                                st.rerun()
-                            else: st.error("❌ ERROR")
-        else: st.warning("⚠️ Sin datos.")
+                    st.markdown("---")
+                    
+                    # ZONA DE CARGA (SIEMPRE SUBE AL MES ACTUAL EN CURSO, NO AL SELECCIONADO EN EL PASADO)
+                    st.markdown(f"""<div style="background-color: rgba(0, 201, 255, 0.1); padding: 10px; border-left: 5px solid #00C9FF; border-radius: 5px; margin-bottom: 20px;">
+                    <p style="margin: 0; color: white !important;">📸 <b>ZONA DE CARGA ({MESES_NOMBRES[mes_actual_idx]}):</b> Seleccione la actividad y suba las fotos.</p></div>""", unsafe_allow_html=True)
+
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        df_pend = df[df["Realizado"] < df["Programado"]]
+                        ops = df_pend["Actividad"].unique() if not df_pend.empty else df["Actividad"].unique()
+                        act_sel = st.selectbox("SELECCIONE ACTIVIDAD:", ops)
+                    with c2:
+                        archivos = st.file_uploader("CARGAR DOCUMENTOS (IMG):", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
+                        if archivos and st.button("ENVIAR TODO A BASE CENTRAL", type="primary"):
+                            with st.spinner(f"Subiendo {len(archivos)} páginas..."):
+                                if enviar_datos_y_fotos(usuario, act_sel, archivos):
+                                    st.success("✅ GUARDADO CORRECTAMENTE")
+                                    time.sleep(2)
+                                    st.rerun()
+                                else: st.error("❌ ERROR AL GUARDAR")
+            else:
+                st.warning(f"⚠️ No se encontraron las columnas 'META {mes_abv}' y 'REALIZADO {mes_abv}' en el Excel de este supervisor.")
+        else: st.warning("⚠️ Sin datos o estructura incorrecta.")
