@@ -128,13 +128,15 @@ def cargar_datos_google(sup):
         return pd.DataFrame(resp.json()) if resp.status_code == 200 else None
     except: return None
 
-def enviar_datos_y_fotos(supervisor, actividad, lista_archivos):
+def enviar_datos_y_archivos(supervisor, actividad, lista_archivos):
     try:
-        lista_b64 = []
+        lista_datos = []
         for archivo in lista_archivos:
             b64_str = base64.b64encode(archivo.getvalue()).decode('utf-8')
-            lista_b64.append(b64_str)
-        payload = {"supervisor": supervisor, "actividad": actividad, "imagenes": lista_b64}
+            ext = archivo.name.split('.')[-1].lower() # Detecta si es pdf o jpg
+            lista_datos.append({"b64": b64_str, "ext": ext})
+        
+        payload = {"supervisor": supervisor, "actividad": actividad, "archivos_data": lista_datos}
         res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=60)
         return res.status_code == 200
     except: return False
@@ -247,10 +249,10 @@ else:
                         ops = df_pend["Actividad"].unique() if not df_pend.empty else df["Actividad"].unique()
                         act_sel = st.selectbox("SELECCIONE ACTIVIDAD:", ops)
                     with c2:
-                        archivos = st.file_uploader("CARGAR DOCUMENTOS (IMG):", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
+                        archivos = st.file_uploader("CARGAR DOCUMENTOS (IMG/PDF):", accept_multiple_files=True, type=['png', 'jpg', 'jpeg', 'pdf'])
                         if archivos and st.button("ENVIAR TODO A BASE CENTRAL", type="primary"):
-                            with st.spinner(f"Subiendo {len(archivos)} páginas..."):
-                                if enviar_datos_y_fotos(usuario, act_sel, archivos):
+                            with st.spinner(f"Subiendo {len(archivos)} archivo(s)..."):
+                                if enviar_datos_y_archivos(usuario, act_sel, archivos): # <--- Usa la nueva función
                                     st.success("✅ GUARDADO CORRECTAMENTE")
                                     time.sleep(2)
                                     st.rerun()
