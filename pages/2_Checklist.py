@@ -4,7 +4,7 @@ import io
 import streamlit as st
 import pandas as pd
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML
+from xhtml2pdf import pisa
 from streamlit_drawable_canvas import st_canvas
 import base64
 from datetime import date
@@ -188,7 +188,12 @@ if st.button("📄 Generar y Enviar PDF", type="primary"):
 
         # Crear PDF
         try:
-            pdf_bytes = HTML(string=html_final).write_pdf()
+            pdf_buffer = io.BytesIO()
+            pisa_status = pisa.CreatePDF(html_final, dest=pdf_buffer)
+            if pisa_status.err:
+                st.error(f"Error al generar PDF: {pisa_status.err}")
+                st.stop()
+            pdf_bytes = pdf_buffer.getvalue()
             
             # --- ENVÍO DE CORREO AUTOMÁTICO ---
             with st.spinner("Enviando reporte a Control Documental..."):
