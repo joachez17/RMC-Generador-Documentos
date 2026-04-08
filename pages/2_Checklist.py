@@ -9,11 +9,6 @@ from streamlit_drawable_canvas import st_canvas
 import base64
 from datetime import date
 import os
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email.mime.text import MIMEText
-from email import encoders
 
 # CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="RMC - Checklist", page_icon="🔧")
@@ -44,60 +39,6 @@ def process_signature(canvas_result):
             return None
     return None
 
-# --- FUNCIÓN DE ENVÍO DE CORREO (EL MOTOR) ---
-def send_email_with_pdf(pdf_bytes, filename, location, inspector_name):
-    # Cargar secretos
-    try:
-        smtp_server = st.secrets["email"]["smtp_server"]
-        smtp_port = st.secrets["email"]["smtp_port"]
-        sender_email = st.secrets["email"]["sender_email"]
-        sender_password = st.secrets["email"]["sender_password"]
-        receiver_email = st.secrets["email"]["receiver_email"]
-    except Exception:
-        st.error("⚠️ Error de configuración de correo (Secrets).")
-        return False
-
-    # Crear el mensaje
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
-    msg['Subject'] = f"CHECKLIST NUEVO: {location} - {inspector_name}"
-
-    body = f"""
-    Estimados Control Documental,
-    
-    Se ha realizado una nueva inspección de herramientas.
-    
-    - Proyecto: {location}
-    - Inspector: {inspector_name}
-    - Fecha: {date.today()}
-    
-    Adjunto encontrarás el reporte en PDF.
-    
-    Atte,
-    Sistema Digital RMC
-    """
-    msg.attach(MIMEText(body, 'plain'))
-
-    # Adjuntar PDF
-    part = MIMEBase('application', 'octet-stream')
-    part.set_payload(pdf_bytes)
-    encoders.encode_base64(part)
-    part.add_header('Content-Disposition', f"attachment; filename= {filename}")
-    msg.attach(part)
-
-    # Enviar
-    try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        text = msg.as_string()
-        server.sendmail(sender_email, receiver_email, text)
-        server.quit()
-        return True
-    except Exception as e:
-        st.error(f"Error al enviar correo: {e}")
-        return False
 
 # === INTERFAZ DE USUARIO ===
 st.title("🔧 Checklist Inspección Herramientas Manuales")
@@ -149,15 +90,13 @@ firma_canvas = st_canvas(
     height=100, width=300, drawing_mode="freedraw", key="firma"
 )
 
-# === GENERACIÓN DEL PDF Y ENVÍO ===
-if st.button("📄 Generar y Enviar PDF", type="primary"):
+# === GENERACIÓN DEL PDF ===
+if st.button("📄 Generar PDF", type="primary"):
     if not proyecto or not inspector:
         st.error("⚠️ Por favor completa Proyecto e Inspector.")
     else:
-        # Procesar Firma
         firma_b64 = process_signature(firma_canvas)
 
-        # Preparar datos
         lista_items = []
         for index, row in datos_editados.iterrows():
             lista_items.append({
@@ -165,17 +104,15 @@ if st.button("📄 Generar y Enviar PDF", type="primary"):
                 "estado": row["A/R"],
                 "obs": row["OBSERVACIONES"]
             })
-        
-        # Cargar Logo
+
         logo_str = get_image_base64(logo_path)
 
-        # Renderizar HTML
         env = Environment(loader=FileSystemLoader(templates_path))
         template = env.get_template("checklist.html")
-        
+
         html_final = template.render(
             logo_b64=logo_str,
-            codigo="24057-SIGOP-R6529", 
+            codigo="24057-SIGOP-R6529",
             revision="2",
             fecha_rev="11/06/25",
             proyecto=proyecto,
@@ -186,25 +123,15 @@ if st.button("📄 Generar y Enviar PDF", type="primary"):
             firma_b64=firma_b64
         )
 
-        # Crear PDF
         try:
-            pdf_bytes = HTML(string=html_final).write_pdf()
-            
-            # --- ENVÍO DE CORREO AUTOMÁTICO ---
-            with st.spinner("Enviando reporte a Control Documental..."):
-                filename_pdf = f"Checklist_{proyecto}_{fecha_chequeo}.pdf"
-                
-                if send_email_with_pdf(pdf_bytes, filename_pdf, proyecto, inspector):
-                    st.success("✅ ¡Reporte enviado exitosamente!")
-                    st.balloons()
-                else:
-                    st.warning("⚠️ El PDF se generó, pero falló el envío de correo.")
+            with st.spinner("Generando PDF..."):
+                pdf_bytes = HTML(string=html_final).write_pdf()
 
-            # Botón de descarga
+            st.success("✅ PDF generado correctamente.")
             st.download_button(
-                label="Descargar Copia Local",
+                label="⬇️ Descargar PDF",
                 data=pdf_bytes,
-                file_name=f"Checklist_{proyecto}.pdf",
+                file_name=f"Checklist_{proyecto}_{fecha_chequeo}.pdf",
                 mime="application/pdf"
             )
         except Exception as e:
