@@ -59,11 +59,11 @@ st.subheader("Condiciones a Verificar")
 
 items_default = [
     {"ITEM": "Estado general de brocas", "A/R": "A", "OBSERVACIONES": ""},
-    {"ITEM": "Estado general de martillos o combos: mangos, caras", "A/R": "A", "OBSERVACIONES": ""},
-    {"ITEM": "Estado general de cinceles: mangos, cabeza", "A/R": "A", "OBSERVACIONES": ""},
-    {"ITEM": "Estado general de picotas: mangos, cabeza", "A/R": "A", "OBSERVACIONES": ""},
-    {"ITEM": "Estado general de palas: mangos, cabeza", "A/R": "A", "OBSERVACIONES": ""},
-    {"ITEM": "Estado general de alicates: mangos, filos", "A/R": "A", "OBSERVACIONES": ""},
+    {"ITEM": "Estado general de martillos o combos: mangos, estado de caras", "A/R": "A", "OBSERVACIONES": ""},
+    {"ITEM": "Estado general de cinceles: mangos, estado de cabeza", "A/R": "A", "OBSERVACIONES": ""},
+    {"ITEM": "Estado general de picotas: mangos, estado de cabeza", "A/R": "A", "OBSERVACIONES": ""},
+    {"ITEM": "Estado general de palas: mangos, estado de cabeza", "A/R": "A", "OBSERVACIONES": ""},
+    {"ITEM": "Estado general de alicates: mangos, filos, deformaciones", "A/R": "A", "OBSERVACIONES": ""},
     {"ITEM": "Estado general de serruchos/sierras: mangos, hojas", "A/R": "A", "OBSERVACIONES": ""},
     {"ITEM": "Estado general de carretillas, neumático, bateas", "A/R": "A", "OBSERVACIONES": ""},
     {"ITEM": "Estado general de limas: mango, desgaste", "A/R": "A", "OBSERVACIONES": ""}
