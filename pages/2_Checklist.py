@@ -112,9 +112,9 @@ if st.button("📄 Generar PDF", type="primary"):
 
         html_final = template.render(
             logo_b64=logo_str,
-            codigo="24057-SIGOP-R6529",
-            revision="2",
-            fecha_rev="11/06/25",
+            codigo="99300-SIGOP-R6529",
+            revision="1",
+            fecha_rev="06/11/24",
             proyecto=proyecto,
             inspector=inspector,
             fecha_chequeo=fecha_chequeo.strftime("%d/%m/%Y"),

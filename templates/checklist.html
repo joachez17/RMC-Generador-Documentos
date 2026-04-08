@@ -4,118 +4,246 @@
     <meta charset="UTF-8">
     <title>Checklist RMC</title>
     <style>
-        /* === CONFIGURACIÓN DE PÁGINA === */
         @page {
             size: A4;
-            margin-left: 1cm;
-            margin-right: 1cm;
-            margin-top: 3.5cm;
-            margin-bottom: 3.5cm;
+            margin-left: 2cm;
+            margin-right: 2cm;
+            margin-top: 2.8cm;
+            margin-bottom: 2.8cm;
+
+            @top-right {
+                content: "| " counter(page);
+                font-size: 9pt;
+                color: #333;
+                font-family: Helvetica, Arial, sans-serif;
+                vertical-align: bottom;
+            }
         }
 
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10pt; color: #333; line-height: 1.3; }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #333;
+            line-height: 1.4;
+        }
 
-        /* === HEADER FIJO === */
+        /* ── HEADER ── */
         .header-fixed {
-            position: fixed; top: -3cm; left: 0; right: 0; height: 2.8cm;
-            background-color: white; z-index: 1000;
+            position: fixed;
+            top: -2.4cm;
+            left: 0; right: 0;
+            height: 2.2cm;
         }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .header-table td { border: none; vertical-align: top; padding: 0; }
+        .codigo-block { font-size: 7.5pt; color: #333; line-height: 1.6; }
+        .codigo-block strong { font-weight: bold; }
+        .logo-img { width: 85px; }
 
-        /* === FOOTER FIJO === */
+        /* ── FOOTER ── */
         .footer-fixed {
-            position: fixed; bottom: -3cm; left: 0; right: 0; height: 2.5cm;
-            text-align: center; font-size: 8pt; color: #777;
+            position: fixed;
+            bottom: -2.4cm;
+            left: 0; right: 0;
+            height: 2.2cm;
+            text-align: center;
+            font-size: 7.5pt;
+            color: #555;
+            line-height: 1.6;
+            border-top: 1px solid #ddd;
+            padding-top: 4px;
         }
 
-        /* Estilos Generales */
-        .footer-company { font-weight: bold; color: #333; font-size: 9pt; margin-bottom: 2px; }
-        .footer-link { color: #004B8D; font-weight: bold; text-decoration: none; }
-        .top-header-table { width: 100%; border: none; }
-        .top-header-table td { border: none; vertical-align: top; }
-        .meta-info { font-size: 8pt; color: #555; text-align: left; }
-        .logo-container { text-align: right; }
-        .logo-img { width: 140px; }
-        .main-title { text-align: center; color: #004B8D; font-size: 18pt; font-weight: bold; text-transform: uppercase; margin: 0 0 20px 0; }
+        /* ── TÍTULO ── */
+        .main-title {
+            text-align: center;
+            color: #004B8D;
+            font-size: 22pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            line-height: 1.2;
+            margin: 0 0 22px 0;
+        }
 
-        .info-table { width: 100%; border-collapse: collapse; border: 1px solid #999; margin-bottom: 20px; }
-        .info-table td { padding: 6px 8px; border: 1px solid #ccc; vertical-align: middle; }
-        .label-cell { background-color: #f2f2f2; font-weight: bold; color: #000; font-size: 9pt; width: 25%; }
-        .input-cell { background-color: #fff; color: #000; font-size: 10pt; }
-        .header-sig-img { height: 45px; display: block; margin: 0 auto; }
+        /* ── INFO FIELDS (subrayados) ── */
+        .info-section { margin-bottom: 18px; }
+        .info-row-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+        .info-row-table td { border: none; vertical-align: bottom; padding: 0; }
+        .field-label {
+            font-size: 8pt;
+            font-weight: bold;
+            color: #000;
+            text-transform: uppercase;
+            white-space: nowrap;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .field-value {
+            border-bottom: 1px solid #444;
+            font-size: 10pt;
+            padding-bottom: 2px;
+            min-height: 16px;
+            display: block;
+        }
+        .field-signature {
+            border-bottom: 1px solid #444;
+            min-height: 45px;
+            display: block;
+        }
 
-        table.checklist { width: 100%; border-collapse: collapse; margin-top: 0; }
-        .header-blue { background-color: #004B8D; color: white; text-align: center; font-weight: bold; padding: 8px; text-transform: uppercase; font-size: 10pt; }
-        .header-black th { background-color: #000; color: white; font-weight: bold; font-size: 8pt; padding: 6px; text-align: center; border: 1px solid #000; }
-        .checklist td { border: 1px solid #ddd; padding: 8px 5px; vertical-align: middle; }
-        .col-idx { width: 5%; text-align: center; color: #888; font-size: 9pt; }
-        .col-ar { width: 10%; text-align: center; font-weight: bold; font-size: 11pt;}
-        .col-obs { width: 35%; font-size: 9pt; }
-        .status-A { color: #009933; } .status-R { color: #cc0000; } .status-NA { color: #666666; }
+        /* ── LEYENDA ── */
+        .legend-row { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+        .legend-row td { border: none; padding: 0; font-size: 7.5pt; }
+        .legend-left { color: #777; text-align: left; }
+        .legend-right { color: #333; text-align: right; }
 
-        .obs-section { margin-top: 20px; }
-        .obs-title { background-color: #f2f2f2; border: 1px solid #ccc; border-bottom: none; font-weight: bold; font-size: 9pt; padding: 5px 10px; display: inline-block; }
-        .obs-box { width: 100%; padding: 10px; border: 1px solid #ccc; font-size: 10pt; min-height: 40px; background-color: #fff; box-sizing: border-box; }
-        .instructions { text-align: right; font-size: 7pt; color: #666; margin-bottom: 5px; }
+        /* ── TABLA CHECKLIST ── */
+        table.checklist { width: 100%; border-collapse: collapse; }
+        .header-blue {
+            background-color: #004B8D;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            padding: 8px;
+            text-transform: uppercase;
+            font-size: 10pt;
+            letter-spacing: 0.5pt;
+        }
+        .header-cols th {
+            background-color: #004B8D;
+            color: white;
+            font-weight: bold;
+            font-size: 8.5pt;
+            padding: 7px 6px;
+            text-align: center;
+            border: none;
+        }
+        .checklist td {
+            padding: 6px 8px;
+            vertical-align: middle;
+            font-size: 9pt;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .row-odd  { background-color: #f5f5f5; }
+        .row-even { background-color: #ffffff; }
+        .col-num  { width: 5%;  text-align: center; color: #999; }
+        .col-item { width: 55%; }
+        .col-ar   { width: 10%; text-align: center; font-weight: bold; font-size: 10pt; }
+        .col-obs  { width: 30%; }
+        .status-A  { color: #009933; }
+        .status-R  { color: #cc0000; }
+        .status-NA { color: #777; }
+
+        /* ── OBSERVACIONES ── */
+        .obs-label {
+            color: #004B8D;
+            font-size: 8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 20px;
+            margin-bottom: 4px;
+        }
+        .obs-content {
+            border-bottom: 1px solid #ccc;
+            min-height: 50px;
+            font-size: 9.5pt;
+            color: #333;
+            padding-bottom: 6px;
+        }
     </style>
 </head>
 <body>
 
+    <!-- HEADER FIJO -->
     <div class="header-fixed">
-        <table class="top-header-table">
+        <table class="header-table">
             <tr>
                 <td>
-                    <div class="meta-info">
-                        <strong>CÓDIGO:</strong> {{ codigo }}<br>
-                        <strong>REV:</strong> {{ revision }} | <strong>FECHA:</strong> {{ fecha_rev }}
+                    <div class="codigo-block">
+                        CÓDIGO: <strong>{{ codigo }}</strong><br>
+                        REV. {{ revision }}. &nbsp; FECHA REV.: <strong>{{ fecha_rev }}</strong>
                     </div>
                 </td>
-                <td><div class="logo-container"><img src="{{ logo_b64 }}" class="logo-img"></div></td>
+                <td style="text-align: right;">
+                    {% if logo_b64 %}<img src="{{ logo_b64 }}" class="logo-img">{% endif %}
+                </td>
             </tr>
         </table>
     </div>
 
+    <!-- FOOTER FIJO -->
     <div class="footer-fixed">
-        <div style="border-top: 1px solid #ccc; padding-top: 5px;">
-            <div class="footer-company">RMC CORPORATE</div>
-            <div>Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar | Teléfono: (32) 260 0305</div>
-            <div>
-                Sitio Web: <span class="footer-link">www.rmccorporate.com</span> |
-                Linkedin &amp; YouTube: <span class="footer-link">RMC Corporate</span> |
-                Correo: <span class="footer-link">contacto@rmc.cl</span>
-            </div>
-        </div>
+        <strong>RMC INDUSTRIAL SPA</strong> &nbsp;|&nbsp; RUT: 77.241.485-4<br>
+        Bellavista 05, Edificio Olimpo, Of. 307, Viña del Mar &nbsp;|&nbsp; Teléfono: (32) 260 0305<br>
+        Sitio Web: <strong>www.rmccorporate.com</strong> &nbsp;|&nbsp;
+        Linkedin &amp; YouTube: <strong>RMC Corporate</strong> &nbsp;|&nbsp;
+        Correo: <strong>contacto@rmc.cl</strong>
     </div>
 
+    <!-- TÍTULO -->
     <div class="main-title">CHECKLIST INSPECCIÓN<br>HERRAMIENTAS MANUALES</div>
 
-    <table class="info-table">
+    <!-- FILA 1: Proyecto + Fecha -->
+    <table class="info-row-table">
         <tr>
-            <td class="label-cell">PROYECTO / UBICACIÓN:</td><td class="input-cell" colspan="3">{{ proyecto }}</td>
-        </tr>
-        <tr>
-            <td class="label-cell">INSPECCIÓN REALIZADA POR:</td><td class="input-cell">{{ inspector }}</td>
-            <td class="label-cell" style="width: 15%;">FECHA:</td><td class="input-cell" style="width: 20%; text-align: center;">{{ fecha_chequeo }}</td>
-        </tr>
-        <tr>
-            <td class="label-cell">FIRMA INSPECTOR:</td>
-            <td class="input-cell" colspan="3" style="height: 50px; text-align: left;">
-                {% if firma_b64 %}<img src="{{ firma_b64 }}" class="header-sig-img" style="margin: 0; margin-left: 20px;">
-                {% else %}<span style="color: #ccc; font-size: 8pt;">(Sin Firma)</span>{% endif %}
+            <td style="width: 62%;">
+                <span class="field-label">UBICACIÓN / PROYECTO:</span>
+                <span class="field-value">{{ proyecto }}</span>
+            </td>
+            <td style="width: 4%;"></td>
+            <td style="width: 34%;">
+                <span class="field-label">FECHA DEL CHEQUEO:</span>
+                <span class="field-value">{{ fecha_chequeo }}</span>
             </td>
         </tr>
     </table>
 
-    <div class="instructions">ESTADOS: <strong>A</strong> = APROBADO | <strong>R</strong> = RECHAZADO | <strong>NA</strong> = NO APLICA</div>
+    <!-- FILA 2: Inspector + Firma -->
+    <table class="info-row-table">
+        <tr>
+            <td style="width: 55%;">
+                <span class="field-label">CHEQUEO / INSPECCIÓN REALIZADA POR:</span>
+                <span class="field-value">{{ inspector }}</span>
+            </td>
+            <td style="width: 4%;"></td>
+            <td style="width: 41%;">
+                <span class="field-label">FIRMA:</span>
+                <span class="field-signature">
+                    {% if firma_b64 %}
+                        <img src="{{ firma_b64 }}" style="height: 40px; display: block;">
+                    {% endif %}
+                </span>
+            </td>
+        </tr>
+    </table>
 
+    <!-- LEYENDA -->
+    <table class="legend-row">
+        <tr>
+            <td class="legend-left">INDICAR LO QUE CORRESPONDA Y AGREGAR EL ESTADO</td>
+            <td class="legend-right">
+                | &nbsp;<strong>A</strong> = APROBADO &nbsp;&nbsp;
+                <strong>R</strong> = RECHAZADO &nbsp;&nbsp;
+                <strong>NA</strong> = NO APLICA
+            </td>
+        </tr>
+    </table>
+
+    <!-- TABLA CHECKLIST -->
     <table class="checklist">
         <thead>
             <tr><td colspan="4" class="header-blue">CONDICIONES A VERIFICAR</td></tr>
-            <tr class="header-black"><th>#</th><th>ITEM</th><th>ESTADO</th><th>OBSERVACIONES</th></tr>
+            <tr class="header-cols">
+                <th style="width:5%;"> </th>
+                <th style="width:55%; text-align:left; padding-left:8px;">ITEM</th>
+                <th style="width:10%;">A / R</th>
+                <th style="width:30%; text-align:left;">OBSERVACIONES</th>
+            </tr>
         </thead>
         <tbody>
             {% for item in items %}
-            <tr>
-                <td class="col-idx">{{ loop.index }}</td>
+            <tr class="{{ 'row-odd' if loop.index is odd else 'row-even' }}">
+                <td class="col-num">{{ loop.index }}</td>
                 <td class="col-item">{{ item.nombre }}</td>
                 <td class="col-ar status-{{ item.estado }}">{{ item.estado }}</td>
                 <td class="col-obs">{{ item.obs }}</td>
@@ -124,10 +252,9 @@
         </tbody>
     </table>
 
-    <div class="obs-section">
-        <div class="obs-title">OBSERVACIONES GENERALES</div>
-        <div class="obs-box">{{ observaciones_generales }}</div>
-    </div>
+    <!-- OBSERVACIONES GENERALES -->
+    <div class="obs-label">OBSERVACIONES</div>
+    <div class="obs-content">{{ observaciones_generales }}</div>
 
 </body>
 </html>
